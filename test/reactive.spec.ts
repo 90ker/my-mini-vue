@@ -57,3 +57,31 @@ describe('reactive 测试2', () => {
         expect(count2).toBe(2);
     });
 })
+
+describe('reactive 测试3', () => {
+    const { reactive, effect } = createReactive();
+    const data = { text: 'xxx', show: true };
+    const obj = reactive(data);
+    let res;
+    let count = 0;
+    effect(() => {
+        count ++;
+        res = obj.show ? obj.text : '';
+    });
+    test('切换逻辑分支后，清除无用响应', () => {
+        expect(res).toBe('xxx');
+        expect(count).toBe(1);
+
+        obj.text = 'xx';
+        expect(res).toBe('xx');
+        expect(count).toBe(2);
+        
+        obj.show = false;
+        expect(res).toBe('');
+        expect(count).toBe(3);
+        
+        obj.text = 'again';
+        expect(res).toBe('');
+        expect(count).toBe(3);
+    });
+})

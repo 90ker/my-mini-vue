@@ -15,6 +15,8 @@ export function createReactive() {
             keyEffectMap.set(key, effects = new Set());
         };
         effects.add(activeEffect);
+        // 给当前effectFn对象，存储上对应的property数组
+        activeEffect.deps.push(effects);
     }
     function trigger(target, key) {
         let keyEffectMap = bucket.get(target);
@@ -25,8 +27,23 @@ export function createReactive() {
         if (!effects) {
             return;
         }
-        effects.forEach(effectFn => effectFn());
+        // effectFn 执行的时候，会删除当前元素，然后重新添加，导致set遍历死循环
+        // effects.forEach(effectFn => effectFn());
+        
+        // 解决方案是克隆一份出来遍历
+        let newEffects = new Set(effects);
+        newEffects.forEach(effectFn => effectFn());
+
     }
+    function cleanUp(effectFn) {
+        // effectFn从dep中把自己删除
+        for (let i = 0; i < effectFn.deps.length; i ++) {
+            let dep = effectFn.deps[i];
+            dep.delete(effectFn);
+        }
+        effectFn.deps.length = 0;
+    }
+
     function reactive(data) {
         const obj = new Proxy(data, {
             get(target, key) {
@@ -42,10 +59,18 @@ export function createReactive() {
         return obj;
     }
     function effect(fn) {
-        activeEffect = fn;
-        fn();
-        // 每一个effect注册后需要清除，否则会导致互相影响
-        activeEffect = null;
+        const effectFn = () => {
+            // 执行前，清除
+            cleanUp(effectFn);
+            // activeEffect注册改为effectFn
+            activeEffect = effectFn;
+            fn();
+            // 每一个effect注册后需要清除，否则会导致互相影响
+            activeEffect = null;
+        }
+        // 初始化时，增加deps属性
+        effectFn.deps = [];
+        effectFn();
     }
     return {
         reactive,
