@@ -32,7 +32,8 @@ export function createReactive() {
         // effects.forEach(effectFn => effectFn());
         
         // 解决方案是克隆一份出来遍历
-        let newEffects = new Set(effects);
+        // 执行前过滤掉当前的activeEffect i++
+        let newEffects = new Set([...effects].filter(effect => effect !== activeEffect));
         newEffects.forEach(effectFn => effectFn());
 
     }

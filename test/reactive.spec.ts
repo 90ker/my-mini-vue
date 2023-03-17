@@ -65,7 +65,7 @@ describe('reactive 测试3', () => {
     let res;
     let count = 0;
     effect(() => {
-        count ++;
+        count++;
         res = obj.show ? obj.text : '';
     });
     test('切换逻辑分支后，清除无用响应', () => {
@@ -75,11 +75,11 @@ describe('reactive 测试3', () => {
         obj.text = 'xx';
         expect(res).toBe('xx');
         expect(count).toBe(2);
-        
+
         obj.show = false;
         expect(res).toBe('');
         expect(count).toBe(3);
-        
+
         obj.text = 'again';
         expect(res).toBe('');
         expect(count).toBe(3);
@@ -115,5 +115,23 @@ describe('reactive 测试4', () => {
         // obj2.num2 = 2;
         // expect(count).toBe(2);
         // expect(count2).toBe(3);
+    });
+})
+
+describe('reactive 测试5', () => {
+    const { reactive, effect } = createReactive();
+    const data = { num: 1 };
+    const obj = reactive(data);
+    let count = 0;
+    effect(() => {
+        count++;
+        obj.num++;
+    });
+
+    test('在effect内自增，会触发set和get，导致无限循环，需要过滤当前effect的执行', () => {
+        expect(count).toBe(1);
+
+        obj.num = 10;
+        expect(count).toBe(2);
     });
 })
