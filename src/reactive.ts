@@ -1,4 +1,5 @@
 export function createReactive() {
+    const effectStack = [];
     let activeEffect = null; // 将当前执行的effect注册全局effect，方便get里收集
     const bucket = new WeakMap();
 
@@ -64,9 +65,11 @@ export function createReactive() {
             cleanUp(effectFn);
             // activeEffect注册改为effectFn
             activeEffect = effectFn;
+            effectStack.push(effectFn);
             fn();
+            effectStack.pop();
             // 每一个effect注册后需要清除，否则会导致互相影响
-            activeEffect = null;
+            activeEffect = effectStack[effectStack.length - 1];
         }
         // 初始化时，增加deps属性
         effectFn.deps = [];

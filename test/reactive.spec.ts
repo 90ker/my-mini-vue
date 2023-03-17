@@ -85,3 +85,35 @@ describe('reactive 测试3', () => {
         expect(count).toBe(3);
     });
 })
+
+describe('reactive 测试4', () => {
+    const { reactive, effect } = createReactive();
+    const data = { num: 1 };
+    const data2 = { num2: 1 };
+    const obj = reactive(data);
+    const obj2 = reactive(data2);
+    let count = 0;
+    let count2 = 0;
+
+    effect(() => {
+        count++;
+        effect(() => {
+            count2++;
+            obj2.num2;
+        })
+        obj.num;
+    });
+
+    test('effect嵌套时，适配对应activeEffect，但是未修复重复添加effect的问题', () => {
+        expect(count).toBe(1);
+        expect(count2).toBe(1);
+
+        obj.num = 3;
+        expect(count).toBe(2);
+        expect(count2).toBe(2);
+
+        // obj2.num2 = 2;
+        // expect(count).toBe(2);
+        // expect(count2).toBe(3);
+    });
+})
