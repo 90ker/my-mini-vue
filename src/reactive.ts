@@ -54,19 +54,19 @@ export function createReactive() {
 
     function reactive(data) {
         const obj = new Proxy(data, {
-            get(target, key) {
+            get(target, key, receiver) {
                 track(target, key);
-                return target[key];
+                return Reflect.get(target, key, receiver);
             },
-            set(target, key, newVal) {
-                target[key] = newVal;
+            set(target, key, newVal, receiver) {
+                Reflect.set(target, key, newVal, receiver);
                 trigger(target, key);
                 return true;
             }
         });
         return obj;
     }
-    function effect(fn, options) {
+    function effect(fn, options = {}) {
         const effectFn = () => {
             // 执行前，清除
             cleanUp(effectFn);

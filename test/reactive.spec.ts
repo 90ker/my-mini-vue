@@ -228,3 +228,26 @@ describe('reactive 测试8', () => {
         })).resolves.toBe(1);
     });
 })
+
+describe('reactive 测试9', () => {
+    const { reactive, effect } = createReactive();
+    const data = {
+        foo: 1,
+        get bar() {
+            return this.foo;
+        }
+    };
+    const obj = reactive(data);
+    let count = 0;
+
+    effect(() => {
+        count ++;
+        obj.bar;
+    })
+    test('测试Reflect对this的修改', async () => {
+        expect(count).toBe(1);
+        obj.foo ++;
+        
+        expect(count).toBe(2);
+    });
+})
