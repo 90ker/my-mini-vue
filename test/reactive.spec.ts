@@ -161,3 +161,20 @@ describe('reactive 测试6', () => {
         })).resolves.toBe(2);
     });
 })
+
+describe('reactive 测试7', () => {
+    const { reactive, computed } = createReactive();
+    const data = { num1: 1, num2: 2 };
+    const obj = reactive(data);
+    let sum = computed(() => obj.num1 + obj.num2);
+
+    test('测试compute', async () => {
+        expect(sum.value).toBe(3);
+        
+        obj.num1 = 2;
+        expect(sum.value).toBe(4);
+
+        obj.num2 = 3;
+        expect(sum.value).toBe(5);
+    });
+})

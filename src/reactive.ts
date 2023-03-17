@@ -73,18 +73,49 @@ export function createReactive() {
             // activeEffect注册改为effectFn
             activeEffect = effectFn;
             effectStack.push(effectFn);
-            fn();
+            let res = fn();
             effectStack.pop();
             // 每一个effect注册后需要清除，否则会导致互相影响
             activeEffect = effectStack[effectStack.length - 1];
+            return res;
         }
         // 初始化时，增加deps属性
         effectFn.deps = [];
         effectFn.options = options;
-        effectFn();
+        if (options?.lazy) {
+            return effectFn;
+        } else {
+            effectFn();
+        }
+    }
+
+    function computed(getter) {
+        let dirty = true; //计算缓存
+        let value = null;
+        const effectFn = effect(getter, {
+            lazy: true,
+            scheduler() {
+                if (!dirty) {
+                    dirty = true;
+                    trigger(obj, 'value');
+                }
+            }
+        })
+        let obj = {
+            get value() {
+                if (dirty) {
+                    dirty = false;
+                    value = effectFn();
+                }
+                track(obj, 'value')
+                return value;
+            }
+        }
+        return obj;
     }
     return {
         reactive,
-        effect
+        effect,
+        computed
     }
 }
