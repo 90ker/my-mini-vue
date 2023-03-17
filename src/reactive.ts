@@ -113,9 +113,63 @@ export function createReactive() {
         }
         return obj;
     }
+    function watch(source, cb, options = {}) {
+        let getter = null;
+        let oldVal = null;
+        let newVal = null;
+        let clear = null;
+        if (typeof source === 'function') {
+            getter = source;
+        } else {
+            getter = () => traverse(source);
+        }
+        // 解决竞态问题
+        function onInvalidate(fn) {
+            clear = fn;
+        }
+        const effectFn = effect(getter, {
+            lazy: true,
+            scheduler() {
+                // 控制effect执行
+                if (options.flush === 'post') {
+                    Promise.resolve().then(() => job());
+                } else {
+                    job();
+                }
+            }
+        });
+
+        let job = () => {
+            if (clear) {
+                // clear上一个凭证
+                clear();
+            }
+            newVal = effectFn();
+            cb(newVal, oldVal, onInvalidate);
+            oldVal = newVal;
+        }
+
+        if (options.immediate) { // 创建则立即执行watch
+            job();
+        } else {
+            oldVal = effectFn();
+        }
+    }
+    // 遍历触发get
+    function traverse(data, seen = new Set()) {
+        if (typeof data !== 'object' || data === null || seen.has(data)) {
+            return;
+        }
+        seen.add(data);
+        for (let key in data) {
+            traverse(data[key], seen);
+        }
+    }
+
     return {
         reactive,
         effect,
-        computed
+        computed,
+        watch
     }
 }

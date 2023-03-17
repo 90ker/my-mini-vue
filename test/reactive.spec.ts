@@ -170,11 +170,61 @@ describe('reactive 测试7', () => {
 
     test('测试compute', async () => {
         expect(sum.value).toBe(3);
-        
+
         obj.num1 = 2;
         expect(sum.value).toBe(4);
 
         obj.num2 = 3;
         expect(sum.value).toBe(5);
+    });
+})
+
+describe('reactive 测试8', () => {
+    const { reactive, watch } = createReactive();
+    const data = { num1: 1, num2: 2 };
+    const obj = reactive(data);
+    let count = 0;
+    let newV = null;
+    let oldV = data.num2;
+
+    watch(() => obj.num2, async (newVal, oldVal, onInvalidate) => {
+        let expired = false; // 过期凭证
+        onInvalidate(() => {
+            expired = true;
+        });
+        await new Promise(res => {
+            setTimeout(() => {
+                res(1);
+            }, 1000);
+        });
+        if (!expired) {
+            count++;
+            newV = newVal;
+            oldV = oldVal;
+        }
+    }, { immediate: true, flush: 'post' });
+
+    test('测试watch', async () => {
+        expect(oldV).toBe(2);
+        expect(newV).toBe(null);
+        expect(count).toBe(0);
+
+        obj.num2 = 3;
+        obj.num2 = 4;
+        obj.num2 = 5;
+        expect(oldV).toBe(2);
+        expect(newV).toBe(null);
+        expect(count).toBe(0);
+
+        // 这里有缺陷
+        // expect(new Promise(res => {
+        //     setTimeout(() => res(oldV), 2000);
+        // })).resolves.toBe(3);
+        expect(new Promise(res => {
+            setTimeout(() => res(newV), 2000);
+        })).resolves.toBe(5);
+        expect(new Promise(res => {
+            setTimeout(() => res(count), 2000);
+        })).resolves.toBe(1);
     });
 })
