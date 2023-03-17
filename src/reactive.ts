@@ -34,7 +34,13 @@ export function createReactive() {
         // 解决方案是克隆一份出来遍历
         // 执行前过滤掉当前的activeEffect i++
         let newEffects = new Set([...effects].filter(effect => effect !== activeEffect));
-        newEffects.forEach(effectFn => effectFn());
+        newEffects.forEach(effectFn => {
+            if (effectFn?.options?.scheduler) {
+                effectFn?.options?.scheduler(effectFn);
+            } else {
+                effectFn()
+            }
+        });
 
     }
     function cleanUp(effectFn) {
@@ -60,7 +66,7 @@ export function createReactive() {
         });
         return obj;
     }
-    function effect(fn) {
+    function effect(fn, options) {
         const effectFn = () => {
             // 执行前，清除
             cleanUp(effectFn);
@@ -74,6 +80,7 @@ export function createReactive() {
         }
         // 初始化时，增加deps属性
         effectFn.deps = [];
+        effectFn.options = options;
         effectFn();
     }
     return {

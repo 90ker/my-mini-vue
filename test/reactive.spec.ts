@@ -135,3 +135,29 @@ describe('reactive 测试5', () => {
         expect(count).toBe(2);
     });
 })
+
+describe('reactive 测试6', () => {
+    const { reactive, effect } = createReactive();
+    const data = { num: 1 };
+    const obj = reactive(data);
+    let count = 0;
+    effect(() => {
+        count++;
+        obj.num;
+    }, {
+        scheduler(fn) {
+            // 这里编写一个异步执行
+            setTimeout(fn, 300);
+        }
+    });
+
+    test('新增调度器，控制effect执行', async () => {
+        expect(count).toBe(1);
+
+        obj.num = 10;
+        expect(count).toBe(1);
+        expect(new Promise(res => {
+            setTimeout(() => res(count), 400);
+        })).resolves.toBe(2);
+    });
+})
