@@ -62,6 +62,10 @@ export function createReactive() {
                 Reflect.set(target, key, newVal, receiver);
                 trigger(target, key);
                 return true;
+            },
+            has(target, key) {
+                track(target, key);
+                return Reflect.has(target, key);
             }
         });
         return obj;

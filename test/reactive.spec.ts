@@ -241,13 +241,34 @@ describe('reactive 测试9', () => {
     let count = 0;
 
     effect(() => {
-        count ++;
+        count++;
         obj.bar;
     })
     test('测试Reflect对this的修改', async () => {
         expect(count).toBe(1);
-        obj.foo ++;
-        
+        obj.foo++;
+
+        expect(count).toBe(2);
+    });
+})
+
+describe('reactive 测试10', () => {
+    const { reactive, effect } = createReactive();
+    const data = {
+        foo: 1
+    };
+    const obj = reactive(data);
+    let count = 0;
+
+    effect(() => {
+        if ('foo' in obj) {
+            count ++;
+        }
+    })
+    test('测试 in 操作的代理', async () => {
+        expect(count).toBe(1);
+        obj.foo++;
+
         expect(count).toBe(2);
     });
 })
