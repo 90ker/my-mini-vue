@@ -61,14 +61,20 @@ export function createReactive() {
         effectFn.deps.length = 0;
     }
 
-    function reactive(data) {
+    function reactive(data, isShadow = false) {
         const obj = new Proxy(data, {
             get(target, key, receiver) {
                 if (key === 'saw') {
                     return target;
                 }
                 track(target, key);
-                return Reflect.get(target, key, receiver);
+                let res = Reflect.get(target, key, receiver);
+                if (!isShadow && typeof res === 'object' && res !== null) {
+                    // 在访问的那一刻，在get里将当前访问的对象变为reactive
+                    return reactive(res);
+                } else {
+                    return res;
+                }
             },
             set(target, key, newVal, receiver) {
                 let oldVal = target[key];
@@ -204,8 +210,12 @@ export function createReactive() {
         }
     }
 
+    function shadowReactive(data) {
+        return reactive(data, true);
+    }
     return {
         reactive,
+        shadowReactive,
         effect,
         computed,
         watch

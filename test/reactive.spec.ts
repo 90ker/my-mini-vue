@@ -350,3 +350,33 @@ describe('reactive 测试14', () => {
         expect(count).toBe(2);
     });
 })
+
+describe('reactive 测试15', () => {
+    const { reactive, shadowReactive, effect } = createReactive();
+    const data = { foo: { bar: 1 } };
+    const obj = reactive(data);
+    const data2 = { foo: { bar: 3 } };
+    const obj2 = shadowReactive(data2);
+
+    let count = 0;
+    let count2 = 0;
+
+    effect(() => {
+        count++;
+        obj.foo.bar;
+    })
+    effect(() => {
+        count2++;
+        obj2.foo.bar;
+    })
+    test('浅响应与深响应', async () => {
+        expect(count).toBe(1);
+        expect(count2).toBe(1);
+
+        obj.foo.bar = 2;
+        expect(count).toBe(2);
+
+        obj2.foo.bar = 4;
+        expect(count2).toBe(1);
+    });
+})
