@@ -380,3 +380,37 @@ describe('reactive 测试15', () => {
         expect(count2).toBe(1);
     });
 })
+
+describe('reactive 测试16', () => {
+    const { readonly, shadowReadonly, effect } = createReactive();
+    const data = { foo: { bar: 1 } };
+    const obj = readonly(data);
+    const data2 = { foo: { bar: 3 } };
+    const obj2 = shadowReadonly(data2);
+
+    let count = 0;
+    let count2 = 0;
+
+    effect(() => {
+        count++;
+        obj.foo.bar;
+    })
+    effect(() => {
+        count2++;
+        obj2.foo;
+    })
+    test('浅只读与深只读', async () => {
+        expect(count).toBe(1);
+        expect(count2).toBe(1);
+
+        obj.foo.bar = 2;
+        expect(count).toBe(1);
+        
+        obj2.foo = 2;
+        expect(count2).toBe(1);
+
+        // 浅只读不完善，没有了响应式
+        // obj2.foo.bar = 4;
+        // expect(count2).toBe(2);
+    });
+})

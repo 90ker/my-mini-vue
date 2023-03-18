@@ -61,27 +61,32 @@ export function createReactive() {
         effectFn.deps.length = 0;
     }
 
-    function reactive(data, isShadow = false) {
+    function reactive(data, isShallow = false, isReadonly = false) {
         const obj = new Proxy(data, {
             get(target, key, receiver) {
                 if (key === 'saw') {
                     return target;
                 }
-                track(target, key);
+                if (!isReadonly) { // 只读不需要收集依赖
+                    track(target, key);
+                }
                 let res = Reflect.get(target, key, receiver);
-                if (!isShadow && typeof res === 'object' && res !== null) {
+                if (!isShallow && typeof res === 'object' && res !== null) {
                     // 在访问的那一刻，在get里将当前访问的对象变为reactive
-                    return reactive(res);
+                    return isReadonly ? readonly(res) : reactive(res, isShallow, isReadonly);
                 } else {
                     return res;
                 }
             },
             set(target, key, newVal, receiver) {
+                if (isReadonly) {
+                    return true;
+                }
                 let oldVal = target[key];
                 // 识别ADD action
                 let action = Object.prototype.hasOwnProperty.call(target, key) ? 'SET' : 'ADD';
                 let res = Reflect.set(target, key, newVal, receiver);
-                
+
                 if (receiver.saw === target) { // 不顺着原型链触发trigger
                     // 注意 NaN的情况
                     if (!Number.isNaN(oldVal) && !Number.isNaN(oldVal) && oldVal !== newVal) {
@@ -99,6 +104,9 @@ export function createReactive() {
                 return Reflect.ownKeys(target);
             },
             deleteProperty(target, key) {
+                if (isReadonly) {
+                    return true;
+                }
                 let isOwn = Object.prototype.hasOwnProperty.call(target, key);
                 let isDel = Reflect.deleteProperty(target, key);
                 if (isOwn && isDel) {
@@ -213,9 +221,17 @@ export function createReactive() {
     function shadowReactive(data) {
         return reactive(data, true);
     }
+    function readonly(data) {
+        return reactive(data, false, true);
+    }
+    function shadowReadonly(data) {
+        return reactive(data, true, true);
+    }
     return {
         reactive,
         shadowReactive,
+        readonly,
+        shadowReadonly,
         effect,
         computed,
         watch
