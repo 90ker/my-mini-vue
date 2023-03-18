@@ -331,3 +331,22 @@ describe('reactive 测试13', () => {
         expect(count).toBe(1);
     });
 })
+
+describe('reactive 测试14', () => {
+    const { reactive, effect } = createReactive();
+    const parent = reactive({ foo: 1 });
+    const child = reactive({});
+    Object.setPrototypeOf(child, parent);
+    let count = 0;
+
+    effect(() => {
+        count++;
+        child.foo;
+    })
+    test('从proxy父对象继承属性，不触发父对象的set', async () => {
+        expect(count).toBe(1);
+
+        child.foo = 2;
+        expect(count).toBe(2);
+    });
+})

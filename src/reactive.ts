@@ -64,6 +64,9 @@ export function createReactive() {
     function reactive(data) {
         const obj = new Proxy(data, {
             get(target, key, receiver) {
+                if (key === 'saw') {
+                    return target;
+                }
                 track(target, key);
                 return Reflect.get(target, key, receiver);
             },
@@ -72,9 +75,12 @@ export function createReactive() {
                 // 识别ADD action
                 let action = Object.prototype.hasOwnProperty.call(target, key) ? 'SET' : 'ADD';
                 let res = Reflect.set(target, key, newVal, receiver);
-                // 注意 NaN的情况
-                if (!Number.isNaN(oldVal) && !Number.isNaN(oldVal) && oldVal !== newVal) {
-                    trigger(target, key, action);
+                
+                if (receiver.saw === target) { // 不顺着原型链触发trigger
+                    // 注意 NaN的情况
+                    if (!Number.isNaN(oldVal) && !Number.isNaN(oldVal) && oldVal !== newVal) {
+                        trigger(target, key, action);
+                    }
                 }
                 return res;
             },
