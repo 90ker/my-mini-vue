@@ -68,10 +68,14 @@ export function createReactive() {
                 return Reflect.get(target, key, receiver);
             },
             set(target, key, newVal, receiver) {
+                let oldVal = target[key];
                 // 识别ADD action
-                let action = Object.prototype.hasOwnProperty.call(target, key) ? 'SET' : 'ADD'; 
+                let action = Object.prototype.hasOwnProperty.call(target, key) ? 'SET' : 'ADD';
                 let res = Reflect.set(target, key, newVal, receiver);
-                trigger(target, key, action);
+                // 注意 NaN的情况
+                if (!Number.isNaN(oldVal) && !Number.isNaN(oldVal) && oldVal !== newVal) {
+                    trigger(target, key, action);
+                }
                 return res;
             },
             has(target, key) {

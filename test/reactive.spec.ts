@@ -262,7 +262,7 @@ describe('reactive 测试10', () => {
 
     effect(() => {
         if ('foo' in obj) {
-            count ++;
+            count++;
         }
     })
     test('测试 in 操作的代理', async () => {
@@ -275,13 +275,13 @@ describe('reactive 测试10', () => {
 
 describe('reactive 测试11', () => {
     const { reactive, effect } = createReactive();
-    const data = { foo: 1, bar: 10};
+    const data = { foo: 1, bar: 10 };
     const obj = reactive(data);
     let count = 0;
 
     effect(() => {
         for (let key in obj) {
-            count ++;
+            count++;
         }
     })
     test('测试 for...in 操作的代理', async () => {
@@ -289,7 +289,7 @@ describe('reactive 测试11', () => {
         obj.foo = 2;
 
         expect(count).toBe(2);
-        
+
         obj.baz = 100;
         expect(count).toBe(5);
     });
@@ -297,19 +297,37 @@ describe('reactive 测试11', () => {
 
 describe('reactive 测试12', () => {
     const { reactive, effect } = createReactive();
-    const data = { foo: 1, bar: 10};
+    const data = { foo: 1, bar: 10 };
     const obj = reactive(data);
     let count = 0;
 
     effect(() => {
         for (let key in obj) {
-            count ++;
+            count++;
         }
     })
     test('测试 delete 操作的代理', async () => {
         expect(count).toBe(2);
-        
+
         delete obj.bar;
         expect(count).toBe(3);
+    });
+})
+
+describe('reactive 测试13', () => {
+    const { reactive, effect } = createReactive();
+    const data = { foo: 1 };
+    const obj = reactive(data);
+    let count = 0;
+
+    effect(() => {
+        count++;
+        obj.foo;
+    })
+    test('屏蔽新旧值相等情况的trigger', async () => {
+        expect(count).toBe(1);
+
+        obj.foo = 1;
+        expect(count).toBe(1);
     });
 })
