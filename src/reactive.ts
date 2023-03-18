@@ -20,7 +20,7 @@ export function createReactive() {
         // 给当前effectFn对象，存储上对应的property数组
         activeEffect.deps.push(effects);
     }
-    function trigger(target, key, action) {
+    function trigger(target, key, action = '') {
         let keyEffectMap = bucket.get(target);
         if (!keyEffectMap) {
             return;
@@ -30,7 +30,8 @@ export function createReactive() {
             effects = keyEffectMap.get(key)
         }
         let iteratorEffects = [];
-        if (action === 'ADD' && keyEffectMap.has(ITERATOR_KEY)) {
+        // 增删会顺便触发ITERATOR
+        if ((action === 'ADD' || action === 'DELETE') && keyEffectMap.has(ITERATOR_KEY)) {
             iteratorEffects = keyEffectMap.get(ITERATOR_KEY);
         }
         // effectFn 执行的时候，会删除当前元素，然后重新添加，导致set遍历死循环
@@ -80,6 +81,15 @@ export function createReactive() {
             ownKeys(target) {
                 track(target, ITERATOR_KEY);
                 return Reflect.ownKeys(target);
+            },
+            deleteProperty(target, key) {
+                let isOwn = Object.prototype.hasOwnProperty.call(target, key);
+                let isDel = Reflect.deleteProperty(target, key);
+                if (isOwn && isDel) {
+                    // 先触发key自身的trigger，再触发ITERATOR_KEY
+                    trigger(target, key, 'DELETE');
+                }
+                return isDel;
             }
         });
         return obj;

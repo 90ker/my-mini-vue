@@ -294,3 +294,22 @@ describe('reactive 测试11', () => {
         expect(count).toBe(5);
     });
 })
+
+describe('reactive 测试12', () => {
+    const { reactive, effect } = createReactive();
+    const data = { foo: 1, bar: 10};
+    const obj = reactive(data);
+    let count = 0;
+
+    effect(() => {
+        for (let key in obj) {
+            count ++;
+        }
+    })
+    test('测试 delete 操作的代理', async () => {
+        expect(count).toBe(2);
+        
+        delete obj.bar;
+        expect(count).toBe(3);
+    });
+})

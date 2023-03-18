@@ -21,6 +21,7 @@
   - [x] 拦截 for...in 操作，属于track操作，按ITERATOR_KEY symbol注册
     - 新增属性会重新触发执行
     - 修改属性不会触发
+  - [x] 拦截 delete 操作，属于trigger操作，触发自身track，顺便触发for...in 
 ## 渲染器
 ## 组件化
 ## 编译器
