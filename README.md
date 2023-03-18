@@ -18,6 +18,9 @@
 - [ ] 普通对象
   - [x] 由于this指向的问题，统一替换成Reflect
   - [x] 拦截 in 操作，属于track操作，按key注册
+  - [x] 拦截 for...in 操作，属于track操作，按ITERATOR_KEY symbol注册
+    - 新增属性会重新触发执行
+    - 修改属性不会触发
 ## 渲染器
 ## 组件化
 ## 编译器

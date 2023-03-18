@@ -2,6 +2,7 @@ export function createReactive() {
     const effectStack = [];
     let activeEffect = null; // 将当前执行的effect注册全局effect，方便get里收集
     const bucket = new WeakMap();
+    const ITERATOR_KEY = Symbol();
 
     function track(target, key) {
         if (!activeEffect) {
@@ -19,21 +20,28 @@ export function createReactive() {
         // 给当前effectFn对象，存储上对应的property数组
         activeEffect.deps.push(effects);
     }
-    function trigger(target, key) {
+    function trigger(target, key, action) {
         let keyEffectMap = bucket.get(target);
         if (!keyEffectMap) {
             return;
         }
-        let effects = keyEffectMap.get(key);
-        if (!effects) {
-            return;
+        let effects = [];
+        if (keyEffectMap.has(key)) {
+            effects = keyEffectMap.get(key)
+        }
+        let iteratorEffects = [];
+        if (action === 'ADD' && keyEffectMap.has(ITERATOR_KEY)) {
+            iteratorEffects = keyEffectMap.get(ITERATOR_KEY);
         }
         // effectFn 执行的时候，会删除当前元素，然后重新添加，导致set遍历死循环
         // effects.forEach(effectFn => effectFn());
-        
+
         // 解决方案是克隆一份出来遍历
         // 执行前过滤掉当前的activeEffect i++
-        let newEffects = new Set([...effects].filter(effect => effect !== activeEffect));
+        let newEffects = new Set([
+            ...effects,
+            ...iteratorEffects
+        ].filter(effect => effect !== activeEffect));
         newEffects.forEach(effectFn => {
             if (effectFn?.options?.scheduler) {
                 effectFn?.options?.scheduler(effectFn);
@@ -45,7 +53,7 @@ export function createReactive() {
     }
     function cleanUp(effectFn) {
         // effectFn从dep中把自己删除
-        for (let i = 0; i < effectFn.deps.length; i ++) {
+        for (let i = 0; i < effectFn.deps.length; i++) {
             let dep = effectFn.deps[i];
             dep.delete(effectFn);
         }
@@ -59,13 +67,19 @@ export function createReactive() {
                 return Reflect.get(target, key, receiver);
             },
             set(target, key, newVal, receiver) {
-                Reflect.set(target, key, newVal, receiver);
-                trigger(target, key);
-                return true;
+                // 识别ADD action
+                let action = Object.prototype.hasOwnProperty.call(target, key) ? 'SET' : 'ADD'; 
+                let res = Reflect.set(target, key, newVal, receiver);
+                trigger(target, key, action);
+                return res;
             },
             has(target, key) {
                 track(target, key);
                 return Reflect.has(target, key);
+            },
+            ownKeys(target) {
+                track(target, ITERATOR_KEY);
+                return Reflect.ownKeys(target);
             }
         });
         return obj;

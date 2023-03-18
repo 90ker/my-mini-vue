@@ -272,3 +272,25 @@ describe('reactive 测试10', () => {
         expect(count).toBe(2);
     });
 })
+
+describe('reactive 测试11', () => {
+    const { reactive, effect } = createReactive();
+    const data = { foo: 1, bar: 10};
+    const obj = reactive(data);
+    let count = 0;
+
+    effect(() => {
+        for (let key in obj) {
+            count ++;
+        }
+    })
+    test('测试 for...in 操作的代理', async () => {
+        expect(count).toBe(2);
+        obj.foo = 2;
+
+        expect(count).toBe(2);
+        
+        obj.baz = 100;
+        expect(count).toBe(5);
+    });
+})
