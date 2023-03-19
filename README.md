@@ -31,6 +31,7 @@
     - 与上同理
 - [ ] 数组
   - [x] 索引影响length
+  - [x] length影响索引,index over length
 ### 原始值的响应式
 ## 渲染器
 ## 组件化

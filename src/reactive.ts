@@ -20,7 +20,7 @@ export function createReactive() {
         // 给当前effectFn对象，存储上对应的property数组
         activeEffect.deps.push(effects);
     }
-    function trigger(target, key, action = '') {
+    function trigger(target, key, action = '', newVal = null) {
         let keyEffectMap = bucket.get(target);
         if (!keyEffectMap) {
             return;
@@ -39,7 +39,16 @@ export function createReactive() {
         if (action === 'ADD' && Array.isArray(target)) {
             lengthEffects = keyEffectMap.get('length');
         }
-        
+
+        let overLengthEffects = [];
+        // 想挑出length之后的元素，写法不太好，太耦合了
+        if (Array.isArray(target) && key === 'length') {
+            keyEffectMap.forEach((effect, idx) => {
+                if (idx >= Number(newVal)) {
+                    overLengthEffects = overLengthEffects.concat([...effect]);
+                }
+            })
+        }
         // effectFn 执行的时候，会删除当前元素，然后重新添加，导致set遍历死循环
         // effects.forEach(effectFn => effectFn());
         // 解决方案是克隆一份出来遍历
@@ -47,7 +56,8 @@ export function createReactive() {
         let newEffects = new Set([
             ...effects,
             ...iteratorEffects,
-            ...lengthEffects
+            ...lengthEffects,
+            ...overLengthEffects
         ].filter(effect => effect !== activeEffect));
         newEffects.forEach(effectFn => {
             if (effectFn?.options?.scheduler) {
@@ -101,7 +111,7 @@ export function createReactive() {
                 if (receiver.saw === target) { // 不顺着原型链触发trigger
                     // 注意 NaN的情况
                     if (!Number.isNaN(oldVal) && !Number.isNaN(oldVal) && oldVal !== newVal) {
-                        trigger(target, key, action);
+                        trigger(target, key, action, newVal);
                     }
                 }
                 return res;

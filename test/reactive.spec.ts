@@ -446,3 +446,31 @@ describe('reactive 测试17', () => {
         
     });
 });
+
+describe('reactive 测试18', () => {
+    const { reactive, effect } = createReactive();
+    const data = ['foo', 'bar'];
+    const obj = reactive(data);
+
+    let count = 0;
+    let lengthCount = 0;
+
+    effect(() => {
+        count++;
+        obj[1];
+    })
+
+    effect(() => {
+        lengthCount++;
+        obj.length;
+    })
+    test('length影响索引', async () => {
+        expect(count).toBe(1);
+        expect(lengthCount).toBe(1);
+        
+        obj.length = 1; // 新增元素
+        expect(count).toBe(2);
+        expect(lengthCount).toBe(2);
+        
+    });
+});
