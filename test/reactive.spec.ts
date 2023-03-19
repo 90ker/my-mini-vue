@@ -498,3 +498,30 @@ describe('reactive 测试19', () => {
         expect(count).toBe(5);
     });
 });
+
+describe('reactive 测试20', () => {
+    const { reactive, effect } = createReactive();
+    const data = ['foo', 'bar'];
+    const obj = reactive(data);
+
+    let count = 0;
+
+    effect(() => {
+        for (let item of obj) {
+            count ++;
+        }
+    })
+
+    test('for...of 操作', async () => {
+        expect(count).toBe(2);
+        
+        obj.length = 1; // 新增元素
+        expect(count).toBe(3);
+        
+        obj[1] = 'baz'; // 新增元素
+        expect(count).toBe(5);
+
+        obj[0] = 'fooo'; // 修改元素
+        expect(count).toBe(7);
+    });
+});

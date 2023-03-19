@@ -44,7 +44,7 @@ export function createReactive() {
         // 想挑出length之后的元素，写法不太好，太耦合了
         if (Array.isArray(target) && key === 'length') {
             keyEffectMap.forEach((effect, idx) => {
-                if ((Number.isFinite(Number(idx)) && idx >= Number(newVal))) {
+                if (typeof idx !== 'symbol' && (Number.isFinite(Number(idx)) && idx >= Number(newVal))) {
                     overLengthEffects = overLengthEffects.concat([...effect]);
                 }
             })
