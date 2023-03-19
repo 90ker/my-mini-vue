@@ -32,6 +32,7 @@
 - [ ] 数组
   - [x] 索引影响length
   - [x] length影响索引,index over length
+  - [ ] 拦截for...in操作，属于track，length改变会触发响应
 ### 原始值的响应式
 ## 渲染器
 ## 组件化

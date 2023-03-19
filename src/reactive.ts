@@ -44,7 +44,7 @@ export function createReactive() {
         // 想挑出length之后的元素，写法不太好，太耦合了
         if (Array.isArray(target) && key === 'length') {
             keyEffectMap.forEach((effect, idx) => {
-                if (idx >= Number(newVal)) {
+                if ((Number.isFinite(Number(idx)) && idx >= Number(newVal))) {
                     overLengthEffects = overLengthEffects.concat([...effect]);
                 }
             })
@@ -121,7 +121,7 @@ export function createReactive() {
                 return Reflect.has(target, key);
             },
             ownKeys(target) {
-                track(target, ITERATOR_KEY);
+                track(target, Array.isArray(target) ? 'length' : ITERATOR_KEY);
                 return Reflect.ownKeys(target);
             },
             deleteProperty(target, key) {

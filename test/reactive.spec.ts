@@ -468,9 +468,33 @@ describe('reactive 测试18', () => {
         expect(count).toBe(1);
         expect(lengthCount).toBe(1);
         
-        obj.length = 1; // 新增元素
+        obj.length = 1; // overLength
         expect(count).toBe(2);
         expect(lengthCount).toBe(2);
         
+    });
+});
+
+describe('reactive 测试19', () => {
+    const { reactive, effect } = createReactive();
+    const data = ['foo', 'bar'];
+    const obj = reactive(data);
+
+    let count = 0;
+
+    effect(() => {
+        for (let key in obj) {
+            count ++;
+        }
+    })
+
+    test('for...in 操作', async () => {
+        expect(count).toBe(2);
+        
+        obj.length = 1; // 新增元素
+        expect(count).toBe(3);
+        
+        obj[1] = 'baz'; // 新增元素
+        expect(count).toBe(5);
     });
 });
