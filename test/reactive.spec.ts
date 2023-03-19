@@ -414,3 +414,35 @@ describe('reactive 测试16', () => {
         // expect(count2).toBe(2);
     });
 })
+
+describe('reactive 测试17', () => {
+    const { reactive, effect } = createReactive();
+    const data = ['foo'];
+    const obj = reactive(data);
+
+    let count = 0;
+    let lengthCount = 0;
+
+    effect(() => {
+        count++;
+        obj[0];
+    })
+
+    effect(() => {
+        lengthCount++;
+        obj.length;
+    })
+    test('索引影响length', async () => {
+        expect(count).toBe(1);
+        expect(lengthCount).toBe(1);
+        
+        obj[0] = 'bar'; // 修改已有
+        expect(count).toBe(2);
+        expect(lengthCount).toBe(1);
+        
+        obj[1] = 'xxx'; // 新增元素
+        expect(count).toBe(2);
+        expect(lengthCount).toBe(2);
+        
+    });
+});

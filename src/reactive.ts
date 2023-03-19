@@ -34,14 +34,20 @@ export function createReactive() {
         if ((action === 'ADD' || action === 'DELETE') && keyEffectMap.has(ITERATOR_KEY)) {
             iteratorEffects = keyEffectMap.get(ITERATOR_KEY);
         }
+
+        let lengthEffects = []; // 其实这里是重复了，原本的key已经拿出来了effect
+        if (action === 'ADD' && Array.isArray(target)) {
+            lengthEffects = keyEffectMap.get('length');
+        }
+        
         // effectFn 执行的时候，会删除当前元素，然后重新添加，导致set遍历死循环
         // effects.forEach(effectFn => effectFn());
-
         // 解决方案是克隆一份出来遍历
         // 执行前过滤掉当前的activeEffect i++
         let newEffects = new Set([
             ...effects,
-            ...iteratorEffects
+            ...iteratorEffects,
+            ...lengthEffects
         ].filter(effect => effect !== activeEffect));
         newEffects.forEach(effectFn => {
             if (effectFn?.options?.scheduler) {
@@ -83,8 +89,13 @@ export function createReactive() {
                     return true;
                 }
                 let oldVal = target[key];
-                // 识别ADD action
-                let action = Object.prototype.hasOwnProperty.call(target, key) ? 'SET' : 'ADD';
+                let action;
+                if (Array.isArray(target)) {
+                    action = Number(key) >= target.length ? 'ADD' : 'SET';
+                } else {
+                    // 识别ADD action
+                    action = Object.prototype.hasOwnProperty.call(target, key) ? 'SET' : 'ADD';
+                }
                 let res = Reflect.set(target, key, newVal, receiver);
 
                 if (receiver.saw === target) { // 不顺着原型链触发trigger
