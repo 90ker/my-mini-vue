@@ -21,7 +21,6 @@ let shouldTrack = true;
     }
 })
 
-
 export function createReactive() {
     const effectStack = [];
     let activeEffect = null; // 将当前执行的effect注册全局effect，方便get里收集
@@ -102,6 +101,28 @@ export function createReactive() {
         effectFn.deps.length = 0;
     }
 
+    const mutableInstrumentations = {
+        add(key){
+            const target = this.raw;
+            const hadKey = target.has(key);
+            const res = target.add(key);
+            if (!hadKey) {
+                trigger(target, key, 'ADD');
+            }
+            return res;
+        },
+        delete(key){
+            const target = this.raw;
+            const hadKey = target.has(key);
+            const res = target.delete(key);
+            if (hadKey) {
+                trigger(target, key, 'DELETE');
+            }
+            return res;
+        }
+    };
+    
+
     function reactive(data, isShallow = false, isReadonly = false) {
         // 利用Map复用代理和原对象之间的映射
         if (reactiveMap.has(data)) {
@@ -119,9 +140,14 @@ export function createReactive() {
                 // Set、Map
                 if (target instanceof Set || target instanceof Map) {
                     if (key === 'size') {
+                        track(target, ITERATOR_KEY);
                         return Reflect.get(target, key, target);
+                    } else if (mutableInstrumentations[key]){
+                        // 代理上所有方法
+                        return mutableInstrumentations[key];
+                    } else {
+                        return target[key].bind(target);
                     }
-                    return target[key].bind(target);
                 }
                 if (!isReadonly) { // 只读不需要收集依赖
                     track(target, key);

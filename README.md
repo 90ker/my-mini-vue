@@ -41,6 +41,7 @@
     - 设置flag，让这些方法不再追踪length的变更
 - [ ] Set、Map
   - [x] 首先让proxy能代理上Set、Map的方法
+  - [x] 代理add、delete方法
 ### 原始值的响应式
 ## 渲染器
 ## 组件化

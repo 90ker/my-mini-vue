@@ -616,11 +616,25 @@ describe('reactive 测试23', () => {
         map.get('key');
         map.delete('key');
     })
+})
 
-    // test('代理修改数组length的方法', () => {
-    //     expect(count).toBe(1);
+describe('reactive 测试24', () => {
+    const { reactive, effect } = createReactive();
+    const set = reactive(new Set([1]));
+    let count = 0;
+
+    effect(() => {
+        count ++;
+        set.size;
+    })
+
+    test('代理Set的add、delete方法', () => {
+        expect(count).toBe(1);
         
-    //     map.set('key', 2);
-    //     expect(count).toBe(2);
-    // })
+        set.add(2);
+        expect(count).toBe(2);
+
+        set.delete(2);
+        expect(count).toBe(3);
+    })
 })
