@@ -39,6 +39,8 @@
     - 通过重写以上方法，使得能同时查询origin对象和proxy对象（这里有些不太理解）
   - [x] 代理隐式修改数组length的方法 push｜pop｜shift｜unshift｜splice
     - 设置flag，让这些方法不再追踪length的变更
+- [ ] Set、Map
+  - [x] 首先让proxy能代理上Set、Map的方法
 ### 原始值的响应式
 ## 渲染器
 ## 组件化

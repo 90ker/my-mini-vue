@@ -405,7 +405,7 @@ describe('reactive 测试16', () => {
 
         obj.foo.bar = 2;
         expect(count).toBe(1);
-        
+
         obj2.foo = 2;
         expect(count2).toBe(1);
 
@@ -435,15 +435,15 @@ describe('reactive 测试17', () => {
     test('索引影响length', async () => {
         expect(count).toBe(1);
         expect(lengthCount).toBe(1);
-        
+
         obj[0] = 'bar'; // 修改已有
         expect(count).toBe(2);
         expect(lengthCount).toBe(1);
-        
+
         obj[1] = 'xxx'; // 新增元素
         expect(count).toBe(2);
         expect(lengthCount).toBe(2);
-        
+
     });
 });
 
@@ -467,11 +467,11 @@ describe('reactive 测试18', () => {
     test('length影响索引', async () => {
         expect(count).toBe(1);
         expect(lengthCount).toBe(1);
-        
+
         obj.length = 1; // overLength
         expect(count).toBe(2);
         expect(lengthCount).toBe(2);
-        
+
     });
 });
 
@@ -484,16 +484,16 @@ describe('reactive 测试19', () => {
 
     effect(() => {
         for (let key in obj) {
-            count ++;
+            count++;
         }
     })
 
     test('for...in 操作', async () => {
         expect(count).toBe(2);
-        
+
         obj.length = 1; // 新增元素
         expect(count).toBe(3);
-        
+
         obj[1] = 'baz'; // 新增元素
         expect(count).toBe(5);
     });
@@ -508,16 +508,16 @@ describe('reactive 测试20', () => {
 
     effect(() => {
         for (let item of obj) {
-            count ++;
+            count++;
         }
     })
 
     test('for...of 操作', async () => {
         expect(count).toBe(2);
-        
+
         obj.length = 1; // 新增元素
         expect(count).toBe(3);
-        
+
         obj[1] = 'baz'; // 新增元素
         expect(count).toBe(5);
 
@@ -556,7 +556,7 @@ describe('reactive 测试21', () => {
         expect(countIncludes).toBe(1);
         expect(countIndexOf).toBe(1);
         expect(countLastIndexOf).toBe(1);
-        
+
         arr[0] = {};
         expect(countIncludes).toBe(2);
         expect(countIndexOf).toBe(2);
@@ -604,4 +604,23 @@ describe('reactive 测试22', () => {
         expect(arr.includes(1)).toBe(true);
         expect(arr.includes(10)).toBe(true);
     })
+})
+
+describe('reactive 测试23', () => {
+    const { reactive, effect } = createReactive();
+    const map = reactive(new Map([['key', 1]]));
+    let count = 0;
+
+    effect(() => {
+        count ++;
+        map.get('key');
+        map.delete('key');
+    })
+
+    // test('代理修改数组length的方法', () => {
+    //     expect(count).toBe(1);
+        
+    //     map.set('key', 2);
+    //     expect(count).toBe(2);
+    // })
 })

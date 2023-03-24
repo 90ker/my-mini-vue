@@ -116,6 +116,13 @@ export function createReactive() {
                 if (Array.isArray(target) && arrayInstrumentations.hasOwnProperty(key)) {
                     return Reflect.get(arrayInstrumentations, key, receiver);
                 }
+                // Set、Map
+                if (target instanceof Set || target instanceof Map) {
+                    if (key === 'size') {
+                        return Reflect.get(target, key, target);
+                    }
+                    return target[key].bind(target);
+                }
                 if (!isReadonly) { // 只读不需要收集依赖
                     track(target, key);
                 }
