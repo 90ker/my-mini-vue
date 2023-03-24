@@ -29,7 +29,7 @@
     - 不是一开始就遍历整个对象，而是在访问的那一刻，在get里将当前访问的对象变为reactive
   - [x] 浅readonly和深readonly
     - 与上同理
-- [ ] 数组
+- [x] 数组
   - [x] 索引影响length
   - [x] length影响索引,index over length
   - [x] 拦截for...in操作，属于track，length改变会触发响应
@@ -37,6 +37,8 @@
   - [x] 代理数组的拦截方法 includes｜indexOf｜lastIndexOf，以修复缺陷
     - 通过映射map，复用之前的reactive对象
     - 通过重写以上方法，使得能同时查询origin对象和proxy对象（这里有些不太理解）
+  - [x] 代理隐式修改数组length的方法 push｜pop｜shift｜unshift｜splice
+    - 设置flag，让这些方法不再追踪length的变更
 ### 原始值的响应式
 ## 渲染器
 ## 组件化

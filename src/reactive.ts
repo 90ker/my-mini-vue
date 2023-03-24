@@ -1,5 +1,4 @@
 const arrayInstrumentations = {};
-
 ['includes', 'indexOf', 'lastIndexOf'].forEach(method => {
     const originMethod = Array.prototype[method];
     arrayInstrumentations[method] = function(...args) {
@@ -11,6 +10,16 @@ const arrayInstrumentations = {};
     }
 })
 
+let shouldTrack = true;
+['push', 'pop', 'shift', 'unshift', 'splice'].forEach(method => {
+    const originMethod = Array.prototype[method];
+    arrayInstrumentations[method] = function(...args) {
+        shouldTrack = false;
+        let res = originMethod.apply(this, args);
+        shouldTrack = true;
+        return res;
+    }
+})
 
 
 export function createReactive() {
@@ -21,7 +30,7 @@ export function createReactive() {
     const reactiveMap = new Map();
 
     function track(target, key) {
-        if (!activeEffect) {
+        if (!activeEffect || !shouldTrack) {
             return;
         }
         let keyEffectMap = bucket.get(target);

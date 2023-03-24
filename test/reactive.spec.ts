@@ -548,6 +548,10 @@ describe('reactive 测试21', () => {
         countLastIndexOf++;
     })
 
+
+    const obj2 = {};
+    const arr2 = reactive([obj2]);
+
     test('代理查找方法： includes、indexOf、lastIndexOf', async () => {
         expect(countIncludes).toBe(1);
         expect(countIndexOf).toBe(1);
@@ -560,10 +564,44 @@ describe('reactive 测试21', () => {
 
         // 对象每次通过get访问，都会重新生成Reactive对象
         expect(arr.includes(arr[0])).toBe(true);
+
+        // 检测是否查询origin
+        expect(arr2.includes(obj2)).toBe(true);
     });
 
-    const obj2 = {};
-    const arr2 = reactive([obj2]);
 
-    expect(arr2.includes(obj2)).toBe(true);
 });
+
+describe('reactive 测试22', () => {
+    const { reactive, effect } = createReactive();
+    const arr = reactive([]);
+
+    effect(() => {
+        arr.push(1);
+    });
+
+    effect(() => {
+        arr.push(2);
+    })
+
+    effect(() => {
+        arr.pop();
+    })
+
+    effect(() => {
+        arr.unshift(2);
+    })
+
+    effect(() => {
+        arr.shift();
+    })
+
+    effect(() => {
+        arr.splice(0, 0, 10);
+    })
+
+    test('代理修改数组length的方法', () => {
+        expect(arr.includes(1)).toBe(true);
+        expect(arr.includes(10)).toBe(true);
+    })
+})
