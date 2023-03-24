@@ -1,8 +1,24 @@
+const arrayInstrumentations = {};
+
+['includes', 'indexOf', 'lastIndexOf'].forEach(method => {
+    const originMethod = Array.prototype[method];
+    arrayInstrumentations[method] = function(...args) {
+        let res = originMethod.apply(this, args);
+        if (res === false || res === -1) {
+            res = originMethod.apply(this.raw, args);
+        }
+        return res;
+    }
+})
+
+
+
 export function createReactive() {
     const effectStack = [];
     let activeEffect = null; // 将当前执行的effect注册全局effect，方便get里收集
     const bucket = new WeakMap();
     const ITERATOR_KEY = Symbol();
+    const reactiveMap = new Map();
 
     function track(target, key) {
         if (!activeEffect) {
@@ -78,10 +94,18 @@ export function createReactive() {
     }
 
     function reactive(data, isShallow = false, isReadonly = false) {
+        // 利用Map复用代理和原对象之间的映射
+        if (reactiveMap.has(data)) {
+            return reactiveMap.get(data);
+        }
+        
         const obj = new Proxy(data, {
             get(target, key, receiver) {
-                if (key === 'saw') {
+                if (key === 'raw') {
                     return target;
+                }
+                if (Array.isArray(target) && arrayInstrumentations.hasOwnProperty(key)) {
+                    return Reflect.get(arrayInstrumentations, key, receiver);
                 }
                 if (!isReadonly) { // 只读不需要收集依赖
                     track(target, key);
@@ -108,7 +132,7 @@ export function createReactive() {
                 }
                 let res = Reflect.set(target, key, newVal, receiver);
 
-                if (receiver.saw === target) { // 不顺着原型链触发trigger
+                if (receiver.raw === target) { // 不顺着原型链触发trigger
                     // 注意 NaN的情况
                     if (!Number.isNaN(oldVal) && !Number.isNaN(oldVal) && oldVal !== newVal) {
                         trigger(target, key, action, newVal);
@@ -137,6 +161,7 @@ export function createReactive() {
                 return isDel;
             }
         });
+        reactiveMap.set(data, obj);
         return obj;
     }
     function effect(fn, options = {}) {

@@ -525,3 +525,45 @@ describe('reactive 测试20', () => {
         expect(count).toBe(7);
     });
 });
+
+describe('reactive 测试21', () => {
+    const { reactive, effect } = createReactive();
+    const arr = reactive(['foo', 'bar']);
+
+    let countIncludes = 0;
+    let countIndexOf = 0;
+    let countLastIndexOf = 0;
+
+    effect(() => {
+        arr.includes('foo');
+        countIncludes++;
+    })
+
+    effect(() => {
+        arr.indexOf('foo');
+        countIndexOf++;
+    })
+    effect(() => {
+        arr.lastIndexOf('foo');
+        countLastIndexOf++;
+    })
+
+    test('代理查找方法： includes、indexOf、lastIndexOf', async () => {
+        expect(countIncludes).toBe(1);
+        expect(countIndexOf).toBe(1);
+        expect(countLastIndexOf).toBe(1);
+        
+        arr[0] = {};
+        expect(countIncludes).toBe(2);
+        expect(countIndexOf).toBe(2);
+        expect(countLastIndexOf).toBe(2);
+
+        // 对象每次通过get访问，都会重新生成Reactive对象
+        expect(arr.includes(arr[0])).toBe(true);
+    });
+
+    const obj2 = {};
+    const arr2 = reactive([obj2]);
+
+    expect(arr2.includes(obj2)).toBe(true);
+});

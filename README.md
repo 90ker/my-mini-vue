@@ -34,6 +34,9 @@
   - [x] length影响索引,index over length
   - [x] 拦截for...in操作，属于track，length改变会触发响应
   - [x] 拦截for...of操作，和for...in 基本一致，内部调用iterator，会自动遍历每个元素，因此也会和单个索引触发
+  - [x] 代理数组的拦截方法 includes｜indexOf｜lastIndexOf，以修复缺陷
+    - 通过映射map，复用之前的reactive对象
+    - 通过重写以上方法，使得能同时查询origin对象和proxy对象（这里有些不太理解）
 ### 原始值的响应式
 ## 渲染器
 ## 组件化
