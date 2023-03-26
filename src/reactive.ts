@@ -119,6 +119,29 @@ export function createReactive() {
                 trigger(target, key, 'DELETE');
             }
             return res;
+        },
+        get(key) {
+            const target = this.raw;
+            const hadKey = target.has(key);
+            track(target, key);
+            if (hadKey) {
+                const res = target.get(key);
+                return typeof res === 'object' ? reactive(res) : res;
+            } else {
+                return;
+            }
+        },
+        set(key, value) {
+            const target = this.raw;
+            const hadKey = target.has(key);
+            const oldVal = target.get(key);
+            const rawVal = value.raw || value;
+            target.set(key, rawVal);
+            if(!hadKey) {
+                trigger(target, key, 'ADD');
+            } else if (!Number.isNaN(oldVal) && !Number.isNaN(value) && oldVal !== value) {
+                trigger(target, key, 'SET');
+            }
         }
     };
     

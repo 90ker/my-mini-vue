@@ -612,7 +612,7 @@ describe('reactive 测试23', () => {
     let count = 0;
 
     effect(() => {
-        count ++;
+        count++;
         map.get('key');
         map.delete('key');
     })
@@ -624,17 +624,39 @@ describe('reactive 测试24', () => {
     let count = 0;
 
     effect(() => {
-        count ++;
+        count++;
         set.size;
     })
 
     test('代理Set的add、delete方法', () => {
         expect(count).toBe(1);
-        
+
         set.add(2);
         expect(count).toBe(2);
 
         set.delete(2);
         expect(count).toBe(3);
+    })
+})
+
+describe('reactive 测试25', () => {
+    const { reactive, effect } = createReactive();
+    const m = new Map();
+    const p1 = reactive(m);
+    const p2 = reactive(new Map());
+    let count = 0;
+
+    p1.set('p2', p2);
+    effect(() => {
+        count++;
+        console.log(m.get('p2').size);
+    });
+
+    test('使原始数据只存储原始对象，防止数据污染', () => {
+        expect(count).toBe(1);
+
+        m.get('p2').set('foo', 1);
+        expect(count).toBe(1);
+
     })
 })
