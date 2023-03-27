@@ -1,7 +1,7 @@
 const arrayInstrumentations = {};
 ['includes', 'indexOf', 'lastIndexOf'].forEach(method => {
     const originMethod = Array.prototype[method];
-    arrayInstrumentations[method] = function(...args) {
+    arrayInstrumentations[method] = function (...args) {
         let res = originMethod.apply(this, args);
         if (res === false || res === -1) {
             res = originMethod.apply(this.raw, args);
@@ -13,7 +13,7 @@ const arrayInstrumentations = {};
 let shouldTrack = true;
 ['push', 'pop', 'shift', 'unshift', 'splice'].forEach(method => {
     const originMethod = Array.prototype[method];
-    arrayInstrumentations[method] = function(...args) {
+    arrayInstrumentations[method] = function (...args) {
         shouldTrack = false;
         let res = originMethod.apply(this, args);
         shouldTrack = true;
@@ -51,11 +51,11 @@ export function createReactive() {
         }
         let effects = [];
         if (keyEffectMap.has(key)) {
-            effects = keyEffectMap.get(key)
+            effects = keyEffectMap.get(key);
         }
         let iteratorEffects = [];
         // 增删会顺便触发ITERATOR
-        if ((action === 'ADD' || action === 'DELETE') && keyEffectMap.has(ITERATOR_KEY)) {
+        if ((action === 'ADD' || action === 'DELETE' || (action === 'SET' && Object.prototype.toString.call(target) === '[object Map]')) && keyEffectMap.has(ITERATOR_KEY)) {
             iteratorEffects = keyEffectMap.get(ITERATOR_KEY);
         }
 
@@ -102,7 +102,7 @@ export function createReactive() {
     }
 
     const mutableInstrumentations = {
-        add(key){
+        add(key) {
             const target = this.raw;
             const hadKey = target.has(key);
             const res = target.add(key);
@@ -111,7 +111,7 @@ export function createReactive() {
             }
             return res;
         },
-        delete(key){
+        delete(key) {
             const target = this.raw;
             const hadKey = target.has(key);
             const res = target.delete(key);
@@ -137,21 +137,30 @@ export function createReactive() {
             const oldVal = target.get(key);
             const rawVal = value.raw || value;
             target.set(key, rawVal);
-            if(!hadKey) {
+            if (!hadKey) {
                 trigger(target, key, 'ADD');
             } else if (!Number.isNaN(oldVal) && !Number.isNaN(value) && oldVal !== value) {
                 trigger(target, key, 'SET');
             }
+        },
+        forEach(callback, thisArg) {
+            const wrap = val => typeof val === 'object' ? reactive(val) : val;
+
+            const target = this.raw;
+            track(target, ITERATOR_KEY);
+            target.forEach((v, k) => {
+                callback.call(thisArg, wrap(v), wrap(k), this);
+            });
         }
     };
-    
+
 
     function reactive(data, isShallow = false, isReadonly = false) {
         // 利用Map复用代理和原对象之间的映射
         if (reactiveMap.has(data)) {
             return reactiveMap.get(data);
         }
-        
+
         const obj = new Proxy(data, {
             get(target, key, receiver) {
                 if (key === 'raw') {
@@ -165,7 +174,7 @@ export function createReactive() {
                     if (key === 'size') {
                         track(target, ITERATOR_KEY);
                         return Reflect.get(target, key, target);
-                    } else if (mutableInstrumentations[key]){
+                    } else if (mutableInstrumentations[key]) {
                         // 代理上所有方法
                         return mutableInstrumentations[key];
                     } else {

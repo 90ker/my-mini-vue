@@ -657,6 +657,49 @@ describe('reactive 测试25', () => {
 
         m.get('p2').set('foo', 1);
         expect(count).toBe(1);
-
     })
+})
+
+describe('reactive 测试26', () => {
+    const { reactive, effect } = createReactive();
+    const p = reactive(new Map([['k', 'v']]))
+    let count = 0;
+
+    effect(() => {
+        p.forEach((val, key) => {
+            count++;
+        })
+    });
+
+    test('代理forEach', () => {
+        expect(count).toBe(1);
+
+        p.set('k2', 'v2');
+        expect(count).toBe(3);
+    })
+
+    test('Map结构的action为SET的时候，也需要触发effect', () => {
+        expect(count).toBe(3);
+
+        p.set('k', 'v3');
+        expect(count).toBe(5);
+    })
+
+    const p2 = reactive(new Map([['kkk', new Set([1, 2, 3])]]));
+    let count2 = 0;
+
+    effect(() => {
+        p2.forEach((val, k) => {
+            val.size;
+            count2++;
+
+        })
+    })
+
+    test('修复forEach内部是原始数据而非proxy数据的缺陷', () => {
+        expect(count2).toBe(1);
+
+        p2.get('kkk').delete(1);
+        expect(count2).toBe(2);
+    });
 })
