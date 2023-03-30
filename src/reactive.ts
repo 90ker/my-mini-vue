@@ -418,6 +418,21 @@ export function createReactive() {
     function shadowReadonly(data) {
         return reactive(data, true, true);
     }
+
+    /**
+     * ref的代理函数
+     */
+    function ref(val) {
+        const wrapper = {
+            value: val
+        }
+
+        Object.defineProperty(wrapper, '__v_isRef', {
+            value: true
+        });
+        return reactive(wrapper);
+    }
+
     return {
         reactive,
         shadowReactive,
@@ -425,6 +440,7 @@ export function createReactive() {
         shadowReadonly,
         effect,
         computed,
-        watch
+        watch,
+        ref
     }
 }

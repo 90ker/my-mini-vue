@@ -748,3 +748,22 @@ describe('reactive 测试27', () => {
     });
 
 })
+
+describe('reactive 测试28', () => {
+    const { ref, effect } = createReactive();
+    const p = ref(1);
+    let count = 0;
+
+    effect(() => {
+        count ++;
+        p.value;
+    })
+
+    test('使用ref包裹原始值', () => {
+        expect(count).toBe(1);
+
+        p.value += 1;
+        expect(count).toBe(2);
+        expect(p.__v_isRef).toBe(true);
+    });
+})

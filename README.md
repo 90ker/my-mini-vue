@@ -39,7 +39,7 @@
     - 通过重写以上方法，使得能同时查询origin对象和proxy对象（这里有些不太理解）
   - [x] 代理隐式修改数组length的方法 push｜pop｜shift｜unshift｜splice
     - 设置flag，让这些方法不再追踪length的变更
-- [ ] Set、Map
+- [x] Set、Map
   - [x] 首先让proxy能代理上Set、Map的方法
   - [x] 代理Set的add、delete方法
   - [x] 避免污染源数据
@@ -47,6 +47,7 @@
   - [x] 代理forEach方法
   - [x] 代理for...of方法
 ### 原始值的响应式
+- [x] 使用ref包裹原始值
 ## 渲染器
 ## 组件化
 ## 编译器
