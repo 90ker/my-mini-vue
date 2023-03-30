@@ -27,6 +27,7 @@ export function createReactive() {
     const bucket = new WeakMap();
     const ITERATOR_KEY = Symbol();
     const reactiveMap = new Map();
+    const MAP_KEY_ITERATE_KEY = Symbol();
 
     function track(target, key) {
         if (!activeEffect || !shouldTrack) {
@@ -59,6 +60,11 @@ export function createReactive() {
             iteratorEffects = keyEffectMap.get(ITERATOR_KEY);
         }
 
+        let mapIteratorEffects = [];
+        if ((action === 'ADD' || action === 'DELETE') && Object.prototype.toString.call(target) === '[object Map]' && keyEffectMap.has(MAP_KEY_ITERATE_KEY)) {
+            mapIteratorEffects = keyEffectMap.get(MAP_KEY_ITERATE_KEY);
+        }
+
         let lengthEffects = []; // 其实这里是重复了，原本的key已经拿出来了effect
         if (action === 'ADD' && Array.isArray(target)) {
             lengthEffects = keyEffectMap.get('length');
@@ -81,7 +87,8 @@ export function createReactive() {
             ...effects,
             ...iteratorEffects,
             ...lengthEffects,
-            ...overLengthEffects
+            ...overLengthEffects,
+            ...mapIteratorEffects
         ].filter(effect => effect !== activeEffect));
         newEffects.forEach(effectFn => {
             if (effectFn?.options?.scheduler) {
@@ -99,6 +106,66 @@ export function createReactive() {
             dep.delete(effectFn);
         }
         effectFn.deps.length = 0;
+    }
+
+    function iterationMethod() {
+        const target = this.raw;
+        const itr = target[Symbol.iterator]();
+        const wrap = val => typeof val === 'object' && val !== null ? reactive(val) : val;
+        track(target, ITERATOR_KEY);
+
+        return {
+            next() {
+                const { value, done } = itr.next();
+                return {
+                    value: wrap(value),
+                    done
+                }
+            },
+            [Symbol.iterator]() {
+                return this;
+            }
+        }
+    }
+
+    function valuesIterationMethod() {
+        const target = this.raw;
+        const itr = target.values();
+        const wrap = val => typeof val === 'object' && val !== null ? reactive(val) : val;
+        track(target, ITERATOR_KEY);
+
+        return {
+            next() {
+                const { value, done } = itr.next();
+                return {
+                    value: wrap(value),
+                    done
+                }
+            },
+            [Symbol.iterator]() {
+                return this;
+            }
+        }
+    }
+
+    function keysIterationMethod() {
+        const target = this.raw;
+        const itr = target.keys();
+        const wrap = val => typeof val === 'object' ? reactive(val) : val;
+        track(target, MAP_KEY_ITERATE_KEY);
+
+        return {
+            next() {
+                const { value, done } = itr.next();
+                return {
+                    value: wrap(value),
+                    done
+                }
+            },
+            [Symbol.iterator]() {
+                return this;
+            }
+        }
     }
 
     const mutableInstrumentations = {
@@ -144,14 +211,18 @@ export function createReactive() {
             }
         },
         forEach(callback, thisArg) {
-            const wrap = val => typeof val === 'object' ? reactive(val) : val;
+            const wrap = val => typeof val === 'object' && val !== null ? reactive(val) : val;
 
             const target = this.raw;
             track(target, ITERATOR_KEY);
             target.forEach((v, k) => {
                 callback.call(thisArg, wrap(v), wrap(k), this);
             });
-        }
+        },
+        [Symbol.iterator]: iterationMethod,
+        entires: iterationMethod,
+        values: valuesIterationMethod,
+        keys: keysIterationMethod
     };
 
 

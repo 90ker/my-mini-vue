@@ -691,15 +691,60 @@ describe('reactive 测试26', () => {
     effect(() => {
         p2.forEach((val, k) => {
             val.size;
-            count2++;
-
+            count2++;   
         })
     })
 
-    test('修复forEach内部是原始数据而非proxy数据的缺陷', () => {
+    test('修复fo rEach内部是原始数据而非proxy数据的缺陷', () => {
         expect(count2).toBe(1);
 
         p2.get('kkk').delete(1);
         expect(count2).toBe(2);
     });
+})
+ 
+describe('reactive 测试27', () => {
+    const { reactive, effect } = createReactive();
+    const p = reactive(new Map([
+        ['key1', 'value1'],
+        ['key2', 'value2']
+    ]));
+    let count = 0;
+    let count2 = 0;
+    let count3 = 0;
+
+    effect(() => {
+        for (const [key, value] of p) {
+            count ++;
+        }
+    });
+
+    effect(() => {
+        for (const value of p.values()) {
+            count2 ++;
+        }
+    });
+
+    effect(() => {
+        for (const key of p.keys()) {
+            count3 ++;
+        }
+    });
+
+    test('代理for...of', () => {
+        expect(count).toBe(2);
+        expect(count2).toBe(2);
+        expect(count2).toBe(2);
+        
+        p.set('key3', 'value3');
+        expect(count).toBe(5);
+        expect(count2).toBe(5);
+        expect(count3).toBe(5);
+
+        p.set('key3', 'value6');
+        expect(count).toBe(8);
+        expect(count2).toBe(8);
+        expect(count3).toBe(5);
+    });
+
 })
