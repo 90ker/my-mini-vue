@@ -456,6 +456,24 @@ export function createReactive() {
         return ret;
     }
 
+    function proxyRefs(target) {
+        return new Proxy(target, {
+            get(target, key, receiver) {
+                const value = Reflect.get(target, key, receiver);
+                return value.__v_isRef ? value.value : value;
+            },
+            set(target, key, newValue, receiver) {
+                const value = target[key];
+                if (value.__v_isRef) {
+                    value.value = newValue;
+                    return true;
+                } else {
+                    return Reflect.set(target, key, newValue, receiver);
+                }
+            }
+        })
+    }
+
     return {
         reactive,
         shadowReactive,
@@ -465,6 +483,7 @@ export function createReactive() {
         computed,
         watch,
         ref,
-        toRefs
+        toRefs,
+        proxyRefs
     }
 }

@@ -788,3 +788,24 @@ describe('reactive 测试29', () => {
         expect(newObj.bar.value).toBe(200);
     });
 })
+
+describe('reactive 测试30', () => {
+    const { reactive, toRefs, proxyRefs, effect } = createReactive();
+    const obj = reactive({ foo: 1, bar: 2 });
+    const newObj = proxyRefs({ ...toRefs(obj) });
+    let count = 0;
+
+    effect(() => {
+        newObj.foo;
+        count ++;
+    })
+
+    test('自动脱ref', () => {
+        expect(count).toBe(1);
+
+        obj.foo = 100;
+        expect(count).toBe(2);
+        newObj.bar = 200;
+        expect(newObj.bar).toBe(200);
+    });
+})
