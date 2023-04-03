@@ -433,6 +433,29 @@ export function createReactive() {
         return reactive(wrapper);
     }
 
+    function toRef(obj, key) {
+        const wrapper = {
+            get value() {
+                return obj[key];
+            },
+            set value(val) {
+                obj[key] = val;
+            }
+        }
+        Object.defineProperty(wrapper, '__v_isRef', {
+            value: true
+        })
+        return wrapper;
+    }
+
+    function toRefs(obj) {
+        const ret = {};
+        for (const key in obj) {
+            ret[key] = toRef(obj, key);
+        }
+        return ret;
+    }
+
     return {
         reactive,
         shadowReactive,
@@ -441,6 +464,7 @@ export function createReactive() {
         effect,
         computed,
         watch,
-        ref
+        ref,
+        toRefs
     }
 }

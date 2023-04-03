@@ -767,3 +767,24 @@ describe('reactive 测试28', () => {
         expect(p.__v_isRef).toBe(true);
     });
 })
+
+describe('reactive 测试29', () => {
+    const { reactive, toRefs, effect } = createReactive();
+    const obj = reactive({ foo: 1, bar: 2 });
+    const newObj = { ...toRefs(obj) }
+    let count = 0;
+
+    effect(() => {
+        newObj.foo.value;
+        count ++;
+    })
+
+    test('处理响应丢失问题', () => {
+        expect(count).toBe(1);
+
+        obj.foo = 100;
+        expect(count).toBe(2);
+        newObj.bar.value = 200;
+        expect(newObj.bar.value).toBe(200);
+    });
+})
