@@ -10,6 +10,18 @@ export const domAPI = {
     },
     insert(el, parent, anchor = null) {
         parent.insertBefore(el, anchor);
+    },
+    patchProps(el, key, value) {
+        if (key in el) {
+            const type = typeof el[key];
+            if (type === 'boolean' && value === '') {
+                el[key] = true;
+            } else {
+                el[key] = value;
+            }
+        } else {
+            el.setAttribute(key, value);
+        }
     }
 }
 
@@ -20,7 +32,8 @@ export function createRenderer(domAPI) {
         createElement,
         setElementText,
         insert,
-        setInnerHTML
+        setInnerHTML,
+        patchProps
     } = domAPI;
     function render(vNode, container) {
         if (vNode) {
@@ -58,7 +71,7 @@ export function createRenderer(domAPI) {
             }
             if (vNode.props) {
                 for (const key in vNode.props) {
-                    el.setAttribute(key, vNode.props[key]);
+                    patchProps(el, key, vNode.props[key]);
                 }
             }
             insert(el, container);

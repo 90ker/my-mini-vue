@@ -57,6 +57,7 @@
   - vNode的挂载、更新、卸载
   - 封装平台API
 - [x] 挂载与更新
-  - [x] 挂载子节点和属性 
+  - [x] 挂载子节点和属性
+  - [x] 处理 HTML Attributes 和 DOM properties
 ## 组件化
 ## 编译器

@@ -69,3 +69,34 @@ test('3. 挂载子节点和属性', () => {
 
     expect($('#app')[0].innerHTML).toBe('<div id="foo"><p>hello</p></div>');
 });
+
+
+test('4. HTML Attributes vs DOM Properties', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            props: {
+                id: 'foo'
+            },
+            children: [
+                {
+                    type: 'button',
+                    props: {
+                        disabled: ''
+                    },
+                    children: 'click'
+                }
+            ]
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<div id="foo"><button disabled="">click</button></div>');
+});
