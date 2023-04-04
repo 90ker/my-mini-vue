@@ -47,12 +47,22 @@ export function createRenderer(domAPI) {
     function mountElement(vNode, container) {
         if (typeof vNode === 'string') {
             setInnerHTML(container, vNode);
+        } else {
+            const el = createElement(vNode.type);
+            if (typeof vNode.children === 'string') {
+                setElementText(el, vNode.children);
+            } else if (Array.isArray(vNode.children)) {
+                vNode.children.forEach(child => {
+                    patch(null, child, el);
+                })
+            }
+            if (vNode.props) {
+                for (const key in vNode.props) {
+                    el.setAttribute(key, vNode.props[key]);
+                }
+            }
+            insert(el, container);
         }
-        const el = createElement(vNode.type);
-        if (typeof vNode.children === 'string') {
-            setElementText(el, vNode.children);
-        }
-        insert(el, container);
     }
 
     return {
