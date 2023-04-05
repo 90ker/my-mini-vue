@@ -12,7 +12,9 @@ export const domAPI = {
         parent.insertBefore(el, anchor);
     },
     patchProps(el, key, value) {
-        if (key in el) {
+        if (key === 'class') {
+            el.className = value || ''
+        } else if (key in el) {
             const type = typeof el[key];
             if (type === 'boolean' && value === '') {
                 el[key] = true;
@@ -80,5 +82,23 @@ export function createRenderer(domAPI) {
 
     return {
         render
+    }
+}
+
+export function normalizeClass(arr) {
+    if (Array.isArray(arr)) {
+        let str = '';
+        for (let item of arr) {
+            if (typeof item === 'string') {
+                str += ' ' + item;
+            } else if (typeof item === 'object'){
+                for (const key in item) {
+                    if (item[key] === true) {
+                        str += ' ' + key;
+                    }
+                }
+            }
+        }
+        return str;
     }
 }

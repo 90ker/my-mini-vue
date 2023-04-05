@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { effect, ref, reactive } from '@vue/reactivity';
-import { createRenderer, domAPI } from '../src/renderer';
+import { createRenderer, domAPI, normalizeClass } from '../src/renderer';
 import $ from 'jquery';
 
 test('1. 渲染与响应结合', () => {
@@ -99,4 +99,28 @@ test('4. HTML Attributes vs DOM Properties', () => {
     });
 
     expect($('#app')[0].innerHTML).toBe('<div id="foo"><button disabled="">click</button></div>');
+});
+
+test('5. 处理Class(Style)', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            props: {
+                class: normalizeClass([
+                    'foo bar',
+                    { baz: true }
+                ])
+            }
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<div class=" foo bar baz"></div>');
 });
