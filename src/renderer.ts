@@ -58,33 +58,50 @@ export function createRenderer(domAPI) {
     }
 
     function patch(n1, n2, container) {
-        if (!n1) {
-            mountElement(n2, container);
-        } else {
-            // 暂时一样
-            mountElement(n2, container);
+        if (typeof n2 === 'string') {
+            setInnerHTML(container, n2);
+            return;
+        }
+        
+        // n1,n2类型不同，直接卸载n1
+        if (n1 && n1.type !== n2.type) {
+            unmount(n1);
+            n1 = null;
+        }
+
+        // 取出n2
+        const { type } = n2;
+        if (typeof type === 'string') {
+            if (!n1) {
+                mountElement(n2, container);
+            } else {
+                // 暂时一样
+                patchElement(n1, n2, container);
+            }
+        } else if (typeof type === 'object') {
+            //组件
         }
     }
 
     function mountElement(vNode, container) {
-        if (typeof vNode === 'string') {
-            setInnerHTML(container, vNode);
-        } else {
-            const el = vNode.el = createElement(vNode.type);
-            if (typeof vNode.children === 'string') {
-                setElementText(el, vNode.children);
-            } else if (Array.isArray(vNode.children)) {
-                vNode.children.forEach(child => {
-                    patch(null, child, el);
-                })
-            }
-            if (vNode.props) {
-                for (const key in vNode.props) {
-                    patchProps(el, key, vNode.props[key]);
-                }
-            }
-            insert(el, container);
+        const el = vNode.el = createElement(vNode.type);
+        if (typeof vNode.children === 'string') {
+            setElementText(el, vNode.children);
+        } else if (Array.isArray(vNode.children)) {
+            vNode.children.forEach(child => {
+                patch(null, child, el);
+            })
         }
+        if (vNode.props) {
+            for (const key in vNode.props) {
+                patchProps(el, key, vNode.props[key]);
+            }
+        }
+        insert(el, container);
+    }
+
+    function patchElement(n1, n2, container) {
+        mountElement(n2, container);
     }
 
     return {
@@ -98,7 +115,7 @@ export function normalizeClass(arr) {
         for (let item of arr) {
             if (typeof item === 'string') {
                 str += ' ' + item;
-            } else if (typeof item === 'object'){
+            } else if (typeof item === 'object') {
                 for (const key in item) {
                     if (item[key] === true) {
                         str += ' ' + key;

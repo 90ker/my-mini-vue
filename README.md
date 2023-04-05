@@ -61,5 +61,6 @@
   - [x] 处理 HTML Attributes 和 DOM properties
   - [x] 处理Class（Style）
   - [x] 卸载vNode
+  - [x] 区分vNode的类型
 ## 组件化
 ## 编译器

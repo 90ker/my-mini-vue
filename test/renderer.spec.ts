@@ -145,3 +145,24 @@ test('6. 卸载vNode', () => {
     data.vNode = null;
     expect($('#app')[0].innerHTML).toBe('');
 });
+
+test('7. 区分vNode的类型', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            children: 'xx'
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<div>xx</div>');
+    data.vNode = null;
+    expect($('#app')[0].innerHTML).toBe('');
+});
