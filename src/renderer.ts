@@ -12,7 +12,29 @@ export const domAPI = {
         parent.insertBefore(el, anchor);
     },
     patchProps(el, key, value) {
-        if (key === 'class') {
+        if (/^on/.test(key)) {
+            const invokers = el._vei || (el._vei = {});
+            let invoker = invokers[key];
+            const name = key.slice(2).toLowerCase();
+            if (value) {
+                if (!invoker) {
+                    // 真实的方法存到函数的value属性里
+                    invoker = el._vei[key] = e => {
+                        if (Array.isArray(invoker.value)) {
+                            invoker.value.forEach(fn => fn(e));
+                        } else {
+                            invoker.value(e);
+                        }
+                    }
+                    el.addEventListener(name, invoker);
+                }
+                invoker.value = value;
+            } else {
+                if (invoker) {
+                    el.removeEventListener(name, invoker);
+                }
+            }
+        } else if (key === 'class') {
             el.className = value || ''
         } else if (key in el) {
             const type = typeof el[key];
@@ -62,7 +84,7 @@ export function createRenderer(domAPI) {
             setInnerHTML(container, n2);
             return;
         }
-        
+
         // n1,n2类型不同，直接卸载n1
         if (n1 && n1.type !== n2.type) {
             unmount(n1);
@@ -101,6 +123,7 @@ export function createRenderer(domAPI) {
     }
 
     function patchElement(n1, n2, container) {
+        setInnerHTML(container, '');
         mountElement(n2, container);
     }
 

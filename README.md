@@ -62,5 +62,6 @@
   - [x] 处理Class（Style）
   - [x] 卸载vNode
   - [x] 区分vNode的类型
+  - [x] 处理事件
 ## 组件化
 ## 编译器

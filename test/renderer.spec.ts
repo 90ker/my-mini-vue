@@ -166,3 +166,34 @@ test('7. 区分vNode的类型', () => {
     data.vNode = null;
     expect($('#app')[0].innerHTML).toBe('');
 });
+
+test('8. 处理事件', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'button',
+            props: {
+                onClick: [
+                    () => {
+                        data.vNode.children = 'clicked';
+                    },
+                    () => {
+                        data.vNode.type = 'radio';
+                    }
+                ]
+            },
+            children: 'click Me'
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<button>click Me</button>');
+    $('button')[0].click();
+    expect($('#app')[0].innerHTML).toBe('<radio>clicked</radio>');
+});
