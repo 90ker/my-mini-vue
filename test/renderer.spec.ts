@@ -197,3 +197,48 @@ test('8. 处理事件', () => {
     $('button')[0].click();
     expect($('#app')[0].innerHTML).toBe('<radio>clicked</radio>');
 });
+
+test('9. 解决事件冒泡与响应式更新冲突问题', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const bol = ref(false);
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            props: bol.value ? {
+                onClick: () => {
+                    data.vNode.children[1].children = 'qqq';
+                },
+                id: 'aa'
+            } : {},
+            children: [
+                {
+                    type: 'button',
+                    props: {
+                        onClick: () => {
+                            bol.value = true;
+                        }
+                    },
+                    children: 'click'
+                },
+                {
+                    type: 'p',
+                    children: 'xxx'
+                }
+            ]
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<div><button>click</button><p>xxx</p></div>');
+    $('button')[0].click();
+    expect($('#app')[0].innerHTML).toBe('<div><button>click</button><p>xxx</p></div>');
+    // TODO 响应式更新仍有问题
+    // $('#aa').click();
+    // expect($('#app')[0].innerHTML).toBe('<div><button>click</button><p>qqq</p></div>');
+});

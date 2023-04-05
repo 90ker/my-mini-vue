@@ -20,12 +20,17 @@ export const domAPI = {
                 if (!invoker) {
                     // 真实的方法存到函数的value属性里
                     invoker = el._vei[key] = e => {
+                        // 由冒泡触发的事件，timeStamp可能小于 attached
+                        if (e.timeStamp < invoker.attached) {
+                            return ;
+                        }
                         if (Array.isArray(invoker.value)) {
                             invoker.value.forEach(fn => fn(e));
                         } else {
                             invoker.value(e);
                         }
                     }
+                    invoker.attached = performance.now();
                     el.addEventListener(name, invoker);
                 }
                 invoker.value = value;
