@@ -60,5 +60,6 @@
   - [x] 挂载子节点和属性
   - [x] 处理 HTML Attributes 和 DOM properties
   - [x] 处理Class（Style）
+  - [x] 卸载vNode
 ## 组件化
 ## 编译器

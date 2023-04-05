@@ -124,3 +124,24 @@ test('5. 处理Class(Style)', () => {
 
     expect($('#app')[0].innerHTML).toBe('<div class=" foo bar baz"></div>');
 });
+
+test('6. 卸载vNode', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            children: 'xx'
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<div>xx</div>');
+    data.vNode = null;
+    expect($('#app')[0].innerHTML).toBe('');
+});

@@ -24,6 +24,12 @@ export const domAPI = {
         } else {
             el.setAttribute(key, value);
         }
+    },
+    unmount(vNode) {
+        const parent = vNode.el.parentNode;
+        if (parent) {
+            parent.removeChild(vNode.el);
+        }
     }
 }
 
@@ -35,7 +41,8 @@ export function createRenderer(domAPI) {
         setElementText,
         insert,
         setInnerHTML,
-        patchProps
+        patchProps,
+        unmount
     } = domAPI;
     function render(vNode, container) {
         if (vNode) {
@@ -44,7 +51,7 @@ export function createRenderer(domAPI) {
         } else {
             // 卸载
             if (container._vNode) {
-                container.innerHTML = '';
+                unmount(container._vNode)
             }
         }
         container._vNode = vNode;
@@ -63,7 +70,7 @@ export function createRenderer(domAPI) {
         if (typeof vNode === 'string') {
             setInnerHTML(container, vNode);
         } else {
-            const el = createElement(vNode.type);
+            const el = vNode.el = createElement(vNode.type);
             if (typeof vNode.children === 'string') {
                 setElementText(el, vNode.children);
             } else if (Array.isArray(vNode.children)) {
