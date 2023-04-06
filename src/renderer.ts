@@ -22,7 +22,7 @@ export const domAPI = {
                     invoker = el._vei[key] = e => {
                         // 由冒泡触发的事件，timeStamp可能小于 attached
                         if (e.timeStamp < invoker.attached) {
-                            return ;
+                            return;
                         }
                         if (Array.isArray(invoker.value)) {
                             invoker.value.forEach(fn => fn(e));
@@ -76,12 +76,12 @@ export function createRenderer(domAPI) {
 
     const insertCount = (...args) => {
         insert.apply(null, args);
-        count ++;
+        count++;
     }
 
     const unmountCount = (...args) => {
         unmount.apply(null, args);
-        count ++;
+        count++;
     }
 
     function render(vNode, container) {
@@ -149,7 +149,7 @@ export function createRenderer(domAPI) {
                 patchProps(el, key, newProps[key]);
             }
         }
-        for(const key in oldProps) {
+        for (const key in oldProps) {
             if (!(key in newProps)) {
                 patchProps(el, key, null);
             }
@@ -169,20 +169,46 @@ export function createRenderer(domAPI) {
             if (Array.isArray(n1.children)) {
                 const oldChildren = n1.children;
                 const newChildren = n2.children;
-
-                const oldLen = oldChildren.length;
-                const newLen = newChildren.length;
-                const commonLength = Math.min(oldLen, newLen);
-                for (let i = 0; i < commonLength; i++) {
-                    patch(oldChildren[i], newChildren[i], container);
-                }
-                if (newLen > oldLen) {
-                    for (let i = commonLength; i < newLen; i ++) {
-                        patch(null, newChildren[i], container);
+                if (oldChildren.some(child => child.key)) {
+                    let lastIndex = 0;
+                    for (let i = 0; i < newChildren.length; i++) {
+                        const newVnode = newChildren[i];
+                        for (let j = 0; j < oldChildren.length; j++) {
+                            const oldVnode = oldChildren[j];
+                            if (!newVnode.key) {
+                                patch(oldVnode, newVnode, container);
+                            } else if (newVnode.key === oldVnode.key) {
+                                patch(oldVnode, newVnode, container);
+                                if (j < lastIndex) {
+                                    // 移动DOM
+                                    const prevNode = newChildren[i - 1];
+                                    if (prevNode) {
+                                        const anchor = prevNode.el.nextSibling;
+                                        // insert可以用于把A点的DOM节点移动到B点
+                                        insert(newVnode.el, container, anchor);
+                                    }
+                                } else {
+                                    lastIndex = j;
+                                }
+                                break;
+                            }
+                        }
                     }
-                } else if (newLen < oldLen){
-                    for (let i = commonLength; i < oldLen; i ++) {
-                        unmountCount(oldChildren[i]);
+                } else {
+                    const oldLen = oldChildren.length;
+                    const newLen = newChildren.length;
+                    const commonLength = Math.min(oldLen, newLen);
+                    for (let i = 0; i < commonLength; i++) {
+                        patch(oldChildren[i], newChildren[i], container);
+                    }
+                    if (newLen > oldLen) {
+                        for (let i = commonLength; i < newLen; i++) {
+                            patch(null, newChildren[i], container);
+                        }
+                    } else if (newLen < oldLen) {
+                        for (let i = commonLength; i < oldLen; i++) {
+                            unmountCount(oldChildren[i]);
+                        }
                     }
                 }
             } else {

@@ -309,7 +309,7 @@ test('11. 减少DOM操作(后)', () => {
     expect(renderer.getCount()).toBe(4);
 });
 
-test('12. DOM复用与key(前)', () => {
+test('12. DOM复用与key(后)', () => {
     document.body.innerHTML = `
         <div id='app'></div>
     `
@@ -317,9 +317,9 @@ test('12. DOM复用与key(前)', () => {
         vNode: {
             type: 'div',
             children: [
-                { type: 'p' },
-                { type: 'div' },
-                { type: 'span' }
+                { type: 'p', children: '1', key: 1 },
+                { type: 'p', children: '2', key: 2 },
+                { type: 'p', children: 'hello', key: 3 },
             ]
         }
     });
@@ -329,15 +329,16 @@ test('12. DOM复用与key(前)', () => {
         renderer.render(data.vNode, $('#app')[0]);
     });
 
+    expect($('#app')[0].innerHTML).toBe('<div><p>1</p><p>2</p><p>hello</p></div>');
     data.vNode = {
         type: 'div',
         children: [
-            { type: 'span' },
-            { type: 'p' },
-            { type: 'div' }
+            { type: 'p', children: 'world', key: 3 },
+            { type: 'p', children: '1', key: 1 },
+            { type: 'p', children: '2', key: 2 },
         ]
     }
-    expect($('#app')[0].innerHTML).toBe('<div><span></span><p></p><div></div></div>');
-    // 初始化4次 + 删除更新（3 + 3）次
-    expect(renderer.getCount()).toBe(10);
+    expect($('#app')[0].innerHTML).toBe('<div><p>world</p><p>1</p><p>2</p></div>');
+    // 初始化3次 + insert移动1次
+    expect(renderer.getCount()).toBe(4);
 });
