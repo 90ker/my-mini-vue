@@ -275,4 +275,35 @@ test('10. 更新子节点', () => {
     expect($('#app')[0].innerHTML).toBe('<button>click Me</button>');
     $('button')[0].click();
     expect($('#app')[0].innerHTML).toBe('<div><p>ppp</p></div>');
+// });
+
+test('11. 减少DOM操作(前)', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            children: [
+                { type: 'p', children: '1' },
+                { type: 'p', children: '2' },
+                { type: 'p', children: '3' }
+            ]
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    data.vNode = {
+        type: 'div',
+        children: [
+            { type: 'p', children: '4' },
+            { type: 'p', children: '5' },
+            { type: 'p', children: '6' }
+        ]
+    }
+    expect(renderer.getCount()).toBe(6);
 });

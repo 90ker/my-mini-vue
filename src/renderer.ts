@@ -71,6 +71,8 @@ export function createRenderer(domAPI) {
         patchProps,
         unmount
     } = domAPI;
+
+    let count = 0;
     function render(vNode, container) {
         if (vNode) {
             // 创建与更新
@@ -142,7 +144,7 @@ export function createRenderer(domAPI) {
             }
         }
 
-        // 更新props
+        // 更新children
         patchChildren(n1, n2, el);
     }
 
@@ -154,8 +156,14 @@ export function createRenderer(domAPI) {
             setElementText(container, n2.children);
         } else if (Array.isArray(n2.children)) {
             if (Array.isArray(n1.children)) {
-                n1.children.forEach(vNode => unmount(vNode));
-                n2.children.forEach(vNode => patch(null, vNode, container));
+                n1.children.forEach(vNode => {
+                    unmount(vNode);
+                    count ++;
+                });
+                n2.children.forEach(vNode => {
+                    patch(null, vNode, container);
+                    count ++;
+                });
             } else {
                 setElementText(container, '');
                 n2.children.forEach(vNode => patch(null, vNode, container));
@@ -169,8 +177,14 @@ export function createRenderer(domAPI) {
         }
     }
 
+
+    function getCount() {
+        return count;
+    }
+
     return {
-        render
+        render,
+        getCount
     }
 }
 
