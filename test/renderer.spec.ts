@@ -242,3 +242,37 @@ test('9. 解决事件冒泡与响应式更新冲突问题', () => {
     // $('#aa').click();
     // expect($('#app')[0].innerHTML).toBe('<div><button>click</button><p>qqq</p></div>');
 });
+
+test('10. 更新子节点', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'button',
+            props: {
+                onClick: [
+                    () => {
+                        data.vNode.type = 'div';
+                    },
+                    () => {
+                        data.vNode.children = [{
+                            type: 'p',
+                            children: 'ppp'
+                        }];
+                    }
+                ]
+            },
+            children: 'click Me'
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<button>click Me</button>');
+    $('button')[0].click();
+    expect($('#app')[0].innerHTML).toBe('<div><p>ppp</p></div>');
+});

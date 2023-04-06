@@ -81,7 +81,7 @@ export function createRenderer(domAPI) {
                 unmount(container._vNode)
             }
         }
-        container._vNode = vNode;
+        container._vNode = { ...vNode };
     }
 
     function patch(n1, n2, container) {
@@ -102,8 +102,7 @@ export function createRenderer(domAPI) {
             if (!n1) {
                 mountElement(n2, container);
             } else {
-                // 暂时一样
-                patchElement(n1, n2, container);
+                patchElement(n1, n2);
             }
         } else if (typeof type === 'object') {
             //组件
@@ -127,9 +126,47 @@ export function createRenderer(domAPI) {
         insert(el, container);
     }
 
-    function patchElement(n1, n2, container) {
-        setInnerHTML(container, '');
-        mountElement(n2, container);
+    function patchElement(n1, n2) {
+        const el = n2.el = n1.el;
+        // 更新props
+        const oldProps = n1.props;
+        const newProps = n2.props;
+        for (const key in newProps) {
+            if (oldProps[key] !== newProps[key]) {
+                patchProps(el, key, newProps[key]);
+            }
+        }
+        for(const key in oldProps) {
+            if (!(key in newProps)) {
+                patchProps(el, key, null);
+            }
+        }
+
+        // 更新props
+        patchChildren(n1, n2, el);
+    }
+
+    function patchChildren(n1, n2, container) {
+        if (typeof n2.children === 'string') {
+            if (Array.isArray(n1.children)) {
+                n1.children.forEach(c => unmount(c));
+            }
+            setElementText(container, n2.children);
+        } else if (Array.isArray(n2.children)) {
+            if (Array.isArray(n1.children)) {
+                n1.children.forEach(vNode => unmount(vNode));
+                n2.children.forEach(vNode => patch(null, vNode, container));
+            } else {
+                setElementText(container, '');
+                n2.children.forEach(vNode => patch(null, vNode, container));
+            }
+        } else {
+            if (typeof n1.children === 'string') {
+                setElementText(container, '');
+            } else if (Array.isArray(n1.children)) {
+                n1.children.forEach(vNode => unmount(vNode));
+            }
+        }
     }
 
     return {
