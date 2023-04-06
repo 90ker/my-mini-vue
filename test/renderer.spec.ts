@@ -277,7 +277,7 @@ test('10. 更新子节点', () => {
     expect($('#app')[0].innerHTML).toBe('<div><p>ppp</p></div>');
 });
 
-test('11. 减少DOM操作(前)', () => {
+test('11. 减少DOM操作(后)', () => {
     document.body.innerHTML = `
         <div id='app'></div>
     `
@@ -305,5 +305,39 @@ test('11. 减少DOM操作(前)', () => {
             { type: 'p', children: '6' }
         ]
     }
-    expect(renderer.getCount()).toBe(3);
+    expect($('#app')[0].innerHTML).toBe('<div><p>4</p><p>5</p><p>6</p></div>');
+    expect(renderer.getCount()).toBe(4);
+});
+
+test('12. DOM复用与key(前)', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            children: [
+                { type: 'p' },
+                { type: 'div' },
+                { type: 'span' }
+            ]
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    data.vNode = {
+        type: 'div',
+        children: [
+            { type: 'span' },
+            { type: 'p' },
+            { type: 'div' }
+        ]
+    }
+    expect($('#app')[0].innerHTML).toBe('<div><span></span><p></p><div></div></div>');
+    // 初始化4次 + 删除更新（3 + 3）次
+    expect(renderer.getCount()).toBe(10);
 });

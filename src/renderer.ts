@@ -63,7 +63,7 @@ export const domAPI = {
 
 
 export function createRenderer(domAPI) {
-    const {
+    let {
         createElement,
         setElementText,
         insert,
@@ -73,6 +73,17 @@ export function createRenderer(domAPI) {
     } = domAPI;
 
     let count = 0;
+
+    const insertCount = (...args) => {
+        insert.apply(null, args);
+        count ++;
+    }
+
+    const unmountCount = (...args) => {
+        unmount.apply(null, args);
+        count ++;
+    }
+
     function render(vNode, container) {
         if (vNode) {
             // 创建与更新
@@ -80,7 +91,7 @@ export function createRenderer(domAPI) {
         } else {
             // 卸载
             if (container._vNode) {
-                unmount(container._vNode)
+                unmountCount(container._vNode)
             }
         }
         container._vNode = { ...vNode };
@@ -94,7 +105,7 @@ export function createRenderer(domAPI) {
 
         // n1,n2类型不同，直接卸载n1
         if (n1 && n1.type !== n2.type) {
-            unmount(n1);
+            unmountCount(n1);
             n1 = null;
         }
 
@@ -125,7 +136,7 @@ export function createRenderer(domAPI) {
                 patchProps(el, key, vNode.props[key]);
             }
         }
-        insert(el, container);
+        insertCount(el, container);
     }
 
     function patchElement(n1, n2) {
@@ -151,7 +162,7 @@ export function createRenderer(domAPI) {
     function patchChildren(n1, n2, container) {
         if (typeof n2.children === 'string') {
             if (Array.isArray(n1.children)) {
-                n1.children.forEach(c => unmount(c));
+                n1.children.forEach(c => unmountCount(c));
             }
             setElementText(container, n2.children);
         } else if (Array.isArray(n2.children)) {
@@ -164,17 +175,14 @@ export function createRenderer(domAPI) {
                 const commonLength = Math.min(oldLen, newLen);
                 for (let i = 0; i < commonLength; i++) {
                     patch(oldChildren[i], newChildren[i], container);
-                    count ++;
                 }
                 if (newLen > oldLen) {
                     for (let i = commonLength; i < newLen; i ++) {
                         patch(null, newChildren[i], container);
-                        count ++;
                     }
                 } else if (newLen < oldLen){
                     for (let i = commonLength; i < oldLen; i ++) {
-                        unmount(oldChildren[i]);
-                        count ++;
+                        unmountCount(oldChildren[i]);
                     }
                 }
             } else {
@@ -185,7 +193,7 @@ export function createRenderer(domAPI) {
             if (typeof n1.children === 'string') {
                 setElementText(container, '');
             } else if (Array.isArray(n1.children)) {
-                n1.children.forEach(vNode => unmount(vNode));
+                n1.children.forEach(vNode => unmountCount(vNode));
             }
         }
     }
