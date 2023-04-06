@@ -275,7 +275,7 @@ test('10. 更新子节点', () => {
     expect($('#app')[0].innerHTML).toBe('<button>click Me</button>');
     $('button')[0].click();
     expect($('#app')[0].innerHTML).toBe('<div><p>ppp</p></div>');
-// });
+});
 
 test('11. 减少DOM操作(前)', () => {
     document.body.innerHTML = `
@@ -305,5 +305,5 @@ test('11. 减少DOM操作(前)', () => {
             { type: 'p', children: '6' }
         ]
     }
-    expect(renderer.getCount()).toBe(6);
+    expect(renderer.getCount()).toBe(3);
 });

@@ -156,14 +156,27 @@ export function createRenderer(domAPI) {
             setElementText(container, n2.children);
         } else if (Array.isArray(n2.children)) {
             if (Array.isArray(n1.children)) {
-                n1.children.forEach(vNode => {
-                    unmount(vNode);
+                const oldChildren = n1.children;
+                const newChildren = n2.children;
+
+                const oldLen = oldChildren.length;
+                const newLen = newChildren.length;
+                const commonLength = Math.min(oldLen, newLen);
+                for (let i = 0; i < commonLength; i++) {
+                    patch(oldChildren[i], newChildren[i], container);
                     count ++;
-                });
-                n2.children.forEach(vNode => {
-                    patch(null, vNode, container);
-                    count ++;
-                });
+                }
+                if (newLen > oldLen) {
+                    for (let i = commonLength; i < newLen; i ++) {
+                        patch(null, newChildren[i], container);
+                        count ++;
+                    }
+                } else if (newLen < oldLen){
+                    for (let i = commonLength; i < oldLen; i ++) {
+                        unmount(oldChildren[i]);
+                        count ++;
+                    }
+                }
             } else {
                 setElementText(container, '');
                 n2.children.forEach(vNode => patch(null, vNode, container));
