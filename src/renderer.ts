@@ -250,61 +250,102 @@ export function createRenderer(domAPI) {
     }
 
     function patchKeyedChildren(n1, n2, container) {
-        const oldChildren = n1.children;
-        const newChildren = n2.children;
+        // 双端Diff
+        if (false) {
+            const oldChildren = n1.children;
+            const newChildren = n2.children;
 
-        let oldStartIdx = 0;
-        let oldEndIdx = oldChildren.length - 1;
-        let newStartIdx = 0;
-        let newEndIdx = newChildren.length - 1;
+            let oldStartIdx = 0;
+            let oldEndIdx = oldChildren.length - 1;
+            let newStartIdx = 0;
+            let newEndIdx = newChildren.length - 1;
 
-        let oldStartVnode = oldChildren[oldStartIdx];
-        let oldEndVnode = oldChildren[oldEndIdx];
-        let newStartVnode = newChildren[newStartIdx];
-        let newEndVnode = newChildren[newEndIdx];
-        while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
-            if (!oldStartVnode) {
-                oldStartVnode = oldChildren[++oldStartIdx];
-            } else if (!oldEndVnode) {
-                oldEndVnode = oldChildren[--oldEndIdx];
-            } else if (oldStartVnode.key === newStartVnode.key) {
-                patch(oldStartVnode, newStartVnode, container);
-                oldStartVnode = oldChildren[++oldStartIdx];
-                newStartVnode = newChildren[++newStartIdx];
-            } else if (oldEndVnode.key === newEndVnode.key) {
-                patch(oldEndVnode, newEndVnode, container);
-                oldEndVnode = oldChildren[--oldEndIdx];
-                newEndVnode = newChildren[--newEndIdx];
-            } else if (oldStartVnode.key === newEndVnode.key) {
-                patch(oldStartVnode, newEndVnode, container);
-                insertCount(oldStartVnode.el, container, oldEndVnode.el.nextSibling);
-                oldStartVnode = oldChildren[++oldStartIdx];
-                newEndVnode = newChildren[--newEndIdx];
-            } else if (oldEndVnode.key === newStartVnode.key) {
-                patch(oldEndVnode, newStartVnode, container);
-                insertCount(oldEndVnode.el, container, oldStartVnode.el);
-                oldEndVnode = oldChildren[--oldEndIdx];
-                newStartVnode = newChildren[++newStartIdx];
-            } else {
-                const idxInOld = oldChildren.findIndex(node => node.key === newStartVnode.key);
-                if (idxInOld > 0) {
-                    const vnodeToMove = oldChildren[idxInOld];
-                    patch(vnodeToMove, newStartVnode, container);
-                    insertCount(vnodeToMove.el, container, oldStartVnode.el);
-                    oldChildren[idxInOld] = undefined;
+            let oldStartVnode = oldChildren[oldStartIdx];
+            let oldEndVnode = oldChildren[oldEndIdx];
+            let newStartVnode = newChildren[newStartIdx];
+            let newEndVnode = newChildren[newEndIdx];
+            while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+                if (!oldStartVnode) {
+                    oldStartVnode = oldChildren[++oldStartIdx];
+                } else if (!oldEndVnode) {
+                    oldEndVnode = oldChildren[--oldEndIdx];
+                } else if (oldStartVnode.key === newStartVnode.key) {
+                    patch(oldStartVnode, newStartVnode, container);
+                    oldStartVnode = oldChildren[++oldStartIdx];
+                    newStartVnode = newChildren[++newStartIdx];
+                } else if (oldEndVnode.key === newEndVnode.key) {
+                    patch(oldEndVnode, newEndVnode, container);
+                    oldEndVnode = oldChildren[--oldEndIdx];
+                    newEndVnode = newChildren[--newEndIdx];
+                } else if (oldStartVnode.key === newEndVnode.key) {
+                    patch(oldStartVnode, newEndVnode, container);
+                    insertCount(oldStartVnode.el, container, oldEndVnode.el.nextSibling);
+                    oldStartVnode = oldChildren[++oldStartIdx];
+                    newEndVnode = newChildren[--newEndIdx];
+                } else if (oldEndVnode.key === newStartVnode.key) {
+                    patch(oldEndVnode, newStartVnode, container);
+                    insertCount(oldEndVnode.el, container, oldStartVnode.el);
+                    oldEndVnode = oldChildren[--oldEndIdx];
+                    newStartVnode = newChildren[++newStartIdx];
                 } else {
-                    patch(null, newStartVnode, container, oldStartVnode.el);
+                    const idxInOld = oldChildren.findIndex(node => node.key === newStartVnode.key);
+                    if (idxInOld > 0) {
+                        const vnodeToMove = oldChildren[idxInOld];
+                        patch(vnodeToMove, newStartVnode, container);
+                        insertCount(vnodeToMove.el, container, oldStartVnode.el);
+                        oldChildren[idxInOld] = undefined;
+                    } else {
+                        patch(null, newStartVnode, container, oldStartVnode.el);
+                    }
+                    newStartVnode = newChildren[++newStartIdx];
                 }
-                newStartVnode = newChildren[++newStartIdx];
             }
-        }
-        if (oldEndIdx < oldStartIdx && newStartIdx <= newEndIdx) {
-            for (let i = newStartIdx; i <= newEndIdx; i++) {
-                patch(null, newChildren[i], container, oldStartVnode.el);
+            if (oldEndIdx < oldStartIdx && newStartIdx <= newEndIdx) {
+                for (let i = newStartIdx; i <= newEndIdx; i++) {
+                    patch(null, newChildren[i], container, oldStartVnode.el);
+                }
+            } else if (newEndIdx < newStartIdx && oldStartIdx <= oldEndIdx) {
+                for (let i = oldStartIdx; i <= oldEndIdx; i++) {
+                    unmountCount(oldChildren[i]);
+                }
             }
-        } else if (newEndIdx < newStartIdx && oldStartIdx <= oldEndIdx) {
-            for (let i = oldStartIdx; i <= oldEndIdx; i++) {
-                unmountCount(oldChildren[i]);
+        } else {
+            // 快速Diff
+            const newChildren = n2.children;
+            const oldChildren = n1.children;
+            let j = 0;
+            let oldNode = oldChildren[j];
+            let newNode = newChildren[j];
+            // 前缀遍历
+            while (oldNode.key === newNode.key) {
+                patch(oldNode, newNode, container);
+                j++;
+                oldNode = oldChildren[j];
+                newNode = newChildren[j];
+            }
+            let oldEnd = oldChildren.length - 1;
+            let newEnd = newChildren.length - 1;
+            oldNode = oldChildren[oldEnd];
+            newNode = newChildren[newEnd];
+            // 后缀遍历
+            while (oldNode.key === newNode.key) {
+                patch(oldNode, newNode, container);
+                oldEnd--;
+                newEnd--;
+                oldNode = oldChildren[oldEnd];
+                newNode = newChildren[newEnd];
+            }
+            // 新增元素
+            if (j > oldEnd && j <= newEnd) {
+                const anchorIndex = newEnd + 1;
+                const anchor = anchorIndex < newChildren.length ? newChildren[anchorIndex].el : null;
+                while (j <= newEnd) {
+                    patch(null, newChildren[j++], container, anchor);
+                }
+            } else if (j > newEnd && j <= oldEnd) {
+                while (j <= oldEnd) {
+                    unmountCount(oldChildren[j++]);
+                }
             }
         }
     }
