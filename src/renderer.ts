@@ -122,7 +122,7 @@ export function createRenderer(domAPI) {
         }
     }
 
-    function mountElement(vNode, container) {
+    function mountElement(vNode, container, anchor) {
         const el = vNode.el = createElement(vNode.type);
         if (typeof vNode.children === 'string') {
             setElementText(el, vNode.children);
@@ -136,7 +136,7 @@ export function createRenderer(domAPI) {
                 patchProps(el, key, vNode.props[key]);
             }
         }
-        insertCount(el, container);
+        insertCount(el, container, anchor);
     }
 
     function patchElement(n1, n2) {
@@ -292,8 +292,15 @@ export function createRenderer(domAPI) {
                     patch(vnodeToMove, newStartVnode, container);
                     insertCount(vnodeToMove.el, container, oldStartVnode.el);
                     oldChildren[idxInOld] = undefined;
-                    newStartVnode = newChildren[++newStartIdx];
+                } else {
+                    patch(null, newStartVnode, container, oldStartVnode.el);    
                 }
+                newStartVnode = newChildren[++newStartIdx];
+            }
+        }
+        if (oldEndIdx < oldStartIdx && newEndIdx <= newStartIdx) {
+            for (let i = newStartIdx; i <= newEndIdx; i ++) {
+                patch(null, newChildren[i], container, oldStartVnode.el);
             }
         }
     }

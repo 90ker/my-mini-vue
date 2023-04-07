@@ -480,3 +480,72 @@ test('15. 双端DIff 第一轮没找到', () => {
     expect(renderer.getCount()).toBe(7);
 });
 
+test('16. 双端DIff 新增节点', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            children: [
+                { type: 'p', children: '1', key: 1 },
+                { type: 'p', children: '2', key: 2 },
+                { type: 'p', children: '3', key: 3 },
+            ]
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<div><p>1</p><p>2</p><p>3</p></div>');
+    data.vNode = {
+        type: 'div',
+        children: [
+            { type: 'p', children: '4', key: 4 },
+            { type: 'p', children: '1', key: 1 },
+            { type: 'p', children: '3', key: 3 },
+            { type: 'p', children: '2', key: 2 },
+        ]
+    }
+    expect($('#app')[0].innerHTML).toBe('<div><p>4</p><p>1</p><p>3</p><p>2</p></div>');
+    // 初始化4次 + insert新增1次 + insert移1次
+    expect(renderer.getCount()).toBe(6);
+});
+
+test('17. 双端DIff 新增节点B', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            children: [
+                { type: 'p', children: '1', key: 1 },
+                { type: 'p', children: '2', key: 2 },
+                { type: 'p', children: '3', key: 3 },
+            ]
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<div><p>1</p><p>2</p><p>3</p></div>');
+    data.vNode = {
+        type: 'div',
+        children: [
+            { type: 'p', children: '4', key: 4 },
+            { type: 'p', children: '1', key: 1 },
+            { type: 'p', children: '2', key: 2 },
+            { type: 'p', children: '3', key: 3 },
+        ]
+    }
+    expect($('#app')[0].innerHTML).toBe('<div><p>4</p><p>1</p><p>2</p><p>3</p></div>');
+    // 初始化4次 + insert新增1次
+    expect(renderer.getCount()).toBe(5);
+});
