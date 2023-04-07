@@ -293,14 +293,18 @@ export function createRenderer(domAPI) {
                     insertCount(vnodeToMove.el, container, oldStartVnode.el);
                     oldChildren[idxInOld] = undefined;
                 } else {
-                    patch(null, newStartVnode, container, oldStartVnode.el);    
+                    patch(null, newStartVnode, container, oldStartVnode.el);
                 }
                 newStartVnode = newChildren[++newStartIdx];
             }
         }
-        if (oldEndIdx < oldStartIdx && newEndIdx <= newStartIdx) {
-            for (let i = newStartIdx; i <= newEndIdx; i ++) {
+        if (oldEndIdx < oldStartIdx && newStartIdx <= newEndIdx) {
+            for (let i = newStartIdx; i <= newEndIdx; i++) {
                 patch(null, newChildren[i], container, oldStartVnode.el);
+            }
+        } else if (newEndIdx < newStartIdx && oldStartIdx <= oldEndIdx) {
+            for (let i = oldStartIdx; i <= oldEndIdx; i++) {
+                unmountCount(oldChildren[i]);
             }
         }
     }
