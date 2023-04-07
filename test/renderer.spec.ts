@@ -339,8 +339,8 @@ test('12. DOM复用与key(后)', () => {
         ]
     }
     expect($('#app')[0].innerHTML).toBe('<div><p>world</p><p>1</p><p>2</p></div>');
-    // 初始化3次 + insert移动1次
-    expect(renderer.getCount()).toBe(4);
+    // 初始化4次 + insert移2次
+    expect(renderer.getCount()).toBe(6);
 });
 
 test('13. 简单Diff新增节点', () => {
@@ -374,6 +374,39 @@ test('13. 简单Diff新增节点', () => {
         ]
     }
     expect($('#app')[0].innerHTML).toBe('<div><p>world</p><p>1</p><p>4</p><p>2</p></div>');
-    // 初始化3次 + insert移动1次 + 新增1次
-    expect(renderer.getCount()).toBe(5);
+    // 初始化4次 + insert移动2次 + 新增1次
+    expect(renderer.getCount()).toBe(7);
+});
+
+test('14. 简单Diff移除节点', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            children: [
+                { type: 'p', children: '1', key: 1 },
+                { type: 'p', children: '2', key: 2 },
+                { type: 'p', children: '3', key: 3 },
+            ]
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<div><p>1</p><p>2</p><p>3</p></div>');
+    data.vNode = {
+        type: 'div',
+        children: [
+            { type: 'p', children: '3', key: 3 },
+            { type: 'p', children: '1', key: 1 },
+        ]
+    }
+    expect($('#app')[0].innerHTML).toBe('<div><p>3</p><p>1</p></div>');
+    // 初始化4次 + insert移动1次 + 删除1次
+    expect(renderer.getCount()).toBe(6);
 });

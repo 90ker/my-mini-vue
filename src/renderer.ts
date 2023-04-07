@@ -187,7 +187,7 @@ export function createRenderer(domAPI) {
                                     if (prevNode) {
                                         const anchor = prevNode.el.nextSibling;
                                         // insert可以用于把A点的DOM节点移动到B点
-                                        insert(newVnode.el, container, anchor);
+                                        insertCount(newVnode.el, container, anchor);
                                     }
                                 } else {
                                     lastIndex = j;
@@ -204,6 +204,13 @@ export function createRenderer(domAPI) {
                                 anchor = container.firstChild;
                             }
                             patch(null, newVnode, container, anchor);
+                        }
+                    }
+                    for (let i = 0; i < oldChildren.length; i ++) {
+                        const oldNode = oldChildren[i];
+                        const has = newChildren.find(vNode => vNode.key === oldNode.key);
+                        if (!has) {
+                            unmountCount(oldNode);
                         }
                     }
                 } else {
