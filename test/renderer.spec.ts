@@ -443,3 +443,40 @@ test('15. 双端DIff', () => {
     // 初始化4次 + insert移1次
     expect(renderer.getCount()).toBe(5);
 });
+
+test('15. 双端DIff 第一轮没找到', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            children: [
+                { type: 'p', children: '1', key: 1 },
+                { type: 'p', children: '2', key: 2 },
+                { type: 'p', children: '3', key: 3 },
+                { type: 'p', children: '4', key: 4 },
+            ]
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<div><p>1</p><p>2</p><p>3</p><p>4</p></div>');
+    data.vNode = {
+        type: 'div',
+        children: [
+            { type: 'p', children: '2', key: 2 },
+            { type: 'p', children: '4', key: 4 },
+            { type: 'p', children: '1', key: 1 },
+            { type: 'p', children: '3', key: 3 },
+        ]
+    }
+    expect($('#app')[0].innerHTML).toBe('<div><p>2</p><p>4</p><p>1</p><p>3</p></div>');
+    // 初始化5次 + insert移2次(2、1)
+    expect(renderer.getCount()).toBe(7);
+});
+

@@ -263,7 +263,11 @@ export function createRenderer(domAPI) {
         let newStartVnode = newChildren[newStartIdx];
         let newEndVnode = newChildren[newEndIdx];
         while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
-            if (oldStartVnode.key === newStartVnode.key) {
+            if (!oldStartVnode) {
+                oldStartVnode = oldChildren[++oldStartIdx];
+            } else if (!oldEndVnode) {
+                oldEndVnode = oldChildren[--oldEndIdx];
+            } else if (oldStartVnode.key === newStartVnode.key) {
                 patch(oldStartVnode, newStartVnode, container);
                 oldStartVnode = oldChildren[++oldStartIdx];
                 newStartVnode = newChildren[++newStartIdx];
@@ -281,6 +285,15 @@ export function createRenderer(domAPI) {
                 insertCount(oldEndVnode.el, container, oldStartVnode.el);
                 oldEndVnode = oldChildren[--oldEndIdx];
                 newStartVnode = newChildren[++newStartIdx];
+            } else {
+                const idxInOld = oldChildren.findIndex(node => node.key === newStartVnode.key);
+                if (idxInOld > 0) {
+                    const vnodeToMove = oldChildren[idxInOld];
+                    patch(vnodeToMove, newStartVnode, container);
+                    insertCount(vnodeToMove.el, container, oldStartVnode.el);
+                    oldChildren[idxInOld] = undefined;
+                    newStartVnode = newChildren[++newStartIdx];
+                }
             }
         }
     }
