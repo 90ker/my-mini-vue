@@ -170,48 +170,54 @@ export function createRenderer(domAPI) {
                 const oldChildren = n1.children;
                 const newChildren = n2.children;
                 if (oldChildren.some(child => child.key)) {
-                    let lastIndex = 0;
-                    for (let i = 0; i < newChildren.length; i++) {
-                        const newVnode = newChildren[i];
-                        let find = false;
-                        for (let j = 0; j < oldChildren.length; j++) {
-                            const oldVnode = oldChildren[j];
-                            if (!newVnode.key) {
-                                patch(oldVnode, newVnode, container);
-                            } else if (newVnode.key === oldVnode.key) {
-                                find = true;
-                                patch(oldVnode, newVnode, container);
-                                if (j < lastIndex) {
-                                    // 移动DOM
-                                    const prevNode = newChildren[i - 1];
-                                    if (prevNode) {
-                                        const anchor = prevNode.el.nextSibling;
-                                        // insert可以用于把A点的DOM节点移动到B点
-                                        insertCount(newVnode.el, container, anchor);
+                    // 简单DIff
+                    if (false) {
+                        let lastIndex = 0;
+                        for (let i = 0; i < newChildren.length; i++) {
+                            const newVnode = newChildren[i];
+                            let find = false;
+                            for (let j = 0; j < oldChildren.length; j++) {
+                                const oldVnode = oldChildren[j];
+                                if (!newVnode.key) {
+                                    patch(oldVnode, newVnode, container);
+                                } else if (newVnode.key === oldVnode.key) {
+                                    find = true;
+                                    patch(oldVnode, newVnode, container);
+                                    if (j < lastIndex) {
+                                        // 移动DOM
+                                        const prevNode = newChildren[i - 1];
+                                        if (prevNode) {
+                                            const anchor = prevNode.el.nextSibling;
+                                            // insert可以用于把A点的DOM节点移动到B点
+                                            insertCount(newVnode.el, container, anchor);
+                                        }
+                                    } else {
+                                        lastIndex = j;
                                     }
-                                } else {
-                                    lastIndex = j;
+                                    break;
                                 }
-                                break;
+                            }
+                            if (!find) {
+                                const prevNode = newChildren[i - 1];
+                                let anchor = null;
+                                if (prevNode) {
+                                    anchor = prevNode.el.nextSibling;
+                                } else {
+                                    anchor = container.firstChild;
+                                }
+                                patch(null, newVnode, container, anchor);
                             }
                         }
-                        if (!find) {
-                            const prevNode = newChildren[i - 1];
-                            let anchor = null;
-                            if (prevNode) {
-                                anchor = prevNode.el.nextSibling;
-                            } else {
-                                anchor = container.firstChild;
+                        for (let i = 0; i < oldChildren.length; i++) {
+                            const oldNode = oldChildren[i];
+                            const has = newChildren.find(vNode => vNode.key === oldNode.key);
+                            if (!has) {
+                                unmountCount(oldNode);
                             }
-                            patch(null, newVnode, container, anchor);
                         }
-                    }
-                    for (let i = 0; i < oldChildren.length; i ++) {
-                        const oldNode = oldChildren[i];
-                        const has = newChildren.find(vNode => vNode.key === oldNode.key);
-                        if (!has) {
-                            unmountCount(oldNode);
-                        }
+                    } else {
+                        // 双端DIff
+                        patchKeyedChildren(n1, n2, container);
                     }
                 } else {
                     const oldLen = oldChildren.length;
@@ -239,6 +245,42 @@ export function createRenderer(domAPI) {
                 setElementText(container, '');
             } else if (Array.isArray(n1.children)) {
                 n1.children.forEach(vNode => unmountCount(vNode));
+            }
+        }
+    }
+
+    function patchKeyedChildren(n1, n2, container) {
+        const oldChildren = n1.children;
+        const newChildren = n2.children;
+
+        let oldStartIdx = 0;
+        let oldEndIdx = oldChildren.length - 1;
+        let newStartIdx = 0;
+        let newEndIdx = newChildren.length - 1;
+
+        let oldStartVnode = oldChildren[oldStartIdx];
+        let oldEndVnode = oldChildren[oldEndIdx];
+        let newStartVnode = newChildren[newStartIdx];
+        let newEndVnode = newChildren[newEndIdx];
+        while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+            if (oldStartVnode.key === newStartVnode.key) {
+                patch(oldStartVnode, newStartVnode, container);
+                oldStartVnode = oldChildren[++oldStartIdx];
+                newStartVnode = newChildren[++newStartIdx];
+            } else if (oldEndVnode.key === newEndVnode.key) {
+                patch(oldEndVnode, newEndVnode, container);
+                oldEndVnode = oldChildren[--oldEndIdx];
+                newEndVnode = newChildren[--newEndIdx];
+            } else if (oldStartVnode.key === newEndVnode.key) {
+                patch(oldStartVnode, newEndVnode, container);
+                insertCount(oldStartVnode.el, container, oldEndVnode.el.nextSibling);
+                oldStartVnode = oldChildren[++oldStartIdx];
+                newEndVnode = newChildren[--newEndIdx];
+            } else if (oldEndVnode.key === newStartVnode.key) {
+                patch(oldEndVnode, newStartVnode, container);
+                insertCount(oldEndVnode.el, container, oldStartVnode.el);
+                oldEndVnode = oldChildren[--oldEndIdx];
+                newStartVnode = newChildren[++newStartIdx];
             }
         }
     }
