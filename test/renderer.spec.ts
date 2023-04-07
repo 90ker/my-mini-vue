@@ -342,3 +342,38 @@ test('12. DOM复用与key(后)', () => {
     // 初始化3次 + insert移动1次
     expect(renderer.getCount()).toBe(4);
 });
+
+test('13. 简单Diff新增节点', () => {
+    document.body.innerHTML = `
+        <div id='app'></div>
+    `
+    const data = reactive({
+        vNode: {
+            type: 'div',
+            children: [
+                { type: 'p', children: '1', key: 1 },
+                { type: 'p', children: '2', key: 2 },
+                { type: 'p', children: 'hello', key: 3 },
+            ]
+        }
+    });
+    const renderer = createRenderer(domAPI);
+
+    effect(() => {
+        renderer.render(data.vNode, $('#app')[0]);
+    });
+
+    expect($('#app')[0].innerHTML).toBe('<div><p>1</p><p>2</p><p>hello</p></div>');
+    data.vNode = {
+        type: 'div',
+        children: [
+            { type: 'p', children: 'world', key: 3 },
+            { type: 'p', children: '1', key: 1 },
+            { type: 'p', children: '4', key: 4},
+            { type: 'p', children: '2', key: 2 },
+        ]
+    }
+    expect($('#app')[0].innerHTML).toBe('<div><p>world</p><p>1</p><p>4</p><p>2</p></div>');
+    // 初始化3次 + insert移动1次 + 新增1次
+    expect(renderer.getCount()).toBe(5);
+});

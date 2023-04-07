@@ -97,7 +97,7 @@ export function createRenderer(domAPI) {
         container._vNode = { ...vNode };
     }
 
-    function patch(n1, n2, container) {
+    function patch(n1, n2, container, anchor = null) {
         if (typeof n2 === 'string') {
             setInnerHTML(container, n2);
             return;
@@ -113,7 +113,7 @@ export function createRenderer(domAPI) {
         const { type } = n2;
         if (typeof type === 'string') {
             if (!n1) {
-                mountElement(n2, container);
+                mountElement(n2, container, anchor);
             } else {
                 patchElement(n1, n2);
             }
@@ -173,11 +173,13 @@ export function createRenderer(domAPI) {
                     let lastIndex = 0;
                     for (let i = 0; i < newChildren.length; i++) {
                         const newVnode = newChildren[i];
+                        let find = false;
                         for (let j = 0; j < oldChildren.length; j++) {
                             const oldVnode = oldChildren[j];
                             if (!newVnode.key) {
                                 patch(oldVnode, newVnode, container);
                             } else if (newVnode.key === oldVnode.key) {
+                                find = true;
                                 patch(oldVnode, newVnode, container);
                                 if (j < lastIndex) {
                                     // 移动DOM
@@ -192,6 +194,16 @@ export function createRenderer(domAPI) {
                                 }
                                 break;
                             }
+                        }
+                        if (!find) {
+                            const prevNode = newChildren[i - 1];
+                            let anchor = null;
+                            if (prevNode) {
+                                anchor = prevNode.el.nextSibling;
+                            } else {
+                                anchor = container.firstChild;
+                            }
+                            patch(null, newVnode, container, anchor);
                         }
                     }
                 } else {
