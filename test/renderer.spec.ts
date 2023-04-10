@@ -550,7 +550,7 @@ test('17. 双端DIff 新增节点B', () => {
     expect(renderer.getCount()).toBe(5);
 });
 
-test('17. 双端DIff 删除节点', () => {
+test('18. 双端DIff 删除节点', () => {
     document.body.innerHTML = `
         <div id='app'></div>
     `

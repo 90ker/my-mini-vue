@@ -1,3 +1,44 @@
+function lis(arr) {
+    const p = arr.slice();
+    const result = [0];
+    let i, j, u, v, c;
+    const len = arr.length
+    for (i = 0; i < len; i++) {
+        const arrI = arr[i]
+        if (arrI !== -1) {
+            j = result[result.length - 1]
+            if (arr[j] < arrI) {
+                p[i] = j
+                result.push(i)
+                continue
+            }
+            u = 0
+            v = result.length - 1
+            while (u < v) {
+                c = ((u + v) / 2) | 0
+                if (arr[result[c]] < arrI) {
+                    u = c + 1
+                } else {
+                    v = c
+                }
+            }
+            if (arrI < arr[result[u]]) {
+                if (u > 0) {
+                    p[i] = result[u - 1]
+                }
+                result[u] = i
+            }
+        }
+    }
+    u = result.length
+    v = result[u - 1]
+    while (u-- > 0) {
+        result[u] = v;
+        v = p[v];
+    }
+    return result;
+}
+
 export const domAPI = {
     createElement(tag) {
         return document.createElement(tag);
@@ -328,7 +369,7 @@ export function createRenderer(domAPI) {
             oldNode = oldChildren[oldEnd];
             newNode = newChildren[newEnd];
             // 后缀遍历
-            while (oldNode.key === newNode.key) {
+            while (oldEnd >= 0 && newEnd >= 0 && oldNode.key === newNode.key) {
                 patch(oldNode, newNode, container);
                 oldEnd--;
                 newEnd--;
@@ -373,16 +414,38 @@ export function createRenderer(domAPI) {
                                 pos = k;
                             }
                         } else {
-                            unmount(oldNode);
+                            unmountCount(oldNode);
                         }
                     } else {
-                        unmount(oldNode);
+                        unmountCount(oldNode);
+                    }
+                }
+                if (moved) {
+                    const seq = lis(source);
+                    let s = seq.length - 1;
+                    let i = count - 1;
+                    for (i; i >= 0; i--) {
+                        const pos = i + newStart;
+                        const newNode = newChildren[pos];
+                        const nextPos = pos + 1;
+                        const anchor = nextPos < newChildren.length ? newChildren[nextPos].el : null;
+                        // 旧节点上没有，则为新增
+                        if (source[i] === -1) {
+                            patch(null, newNode, container, anchor);
+                        } else if (i !== seq[s]) {
+                            // index 不在最长子序列中， 则需要移动
+                            insertCount(newNode.el, container, anchor);
+                        } else {
+                            /**
+                             * 节约时间的关键，就是找出尽可能多的不需要移动的DOM
+                             */
+                            s--;
+                        }
                     }
                 }
             }
         }
     }
-
 
     function getCount() {
         return count;
