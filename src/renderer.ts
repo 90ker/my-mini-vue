@@ -346,6 +346,39 @@ export function createRenderer(domAPI) {
                 while (j <= oldEnd) {
                     unmountCount(oldChildren[j++]);
                 }
+            } else {
+                const count = newEnd - j + 1;
+                const source = new Array(count).fill(-1);
+                const oldStart = j;
+                const newStart = j;
+                let moved = false;
+                let pos = 0;
+                const keyIndex = {};
+                for (let i = newStart; i <= newEnd; i++) {
+                    keyIndex[newChildren[i].key] = i;
+                }
+                let patched = 0;
+                for (let i = oldStart; i <= oldEnd; i++) {
+                    oldNode = oldChildren[i];
+                    if (patched <= count) {
+                        const k = keyIndex[oldNode.key];
+                        if (typeof k !== 'undefined') {
+                            newNode = newChildren[k];
+                            patch(oldNode, newNode, container);
+                            patched++;
+                            source[k - newStart] = i;
+                            if (k < pos) {
+                                moved = true;
+                            } else {
+                                pos = k;
+                            }
+                        } else {
+                            unmount(oldNode);
+                        }
+                    } else {
+                        unmount(oldNode);
+                    }
+                }
             }
         }
     }
